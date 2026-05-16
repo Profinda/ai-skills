@@ -4,7 +4,7 @@ Shared skill library for ProFinda repos. Skills teach the AI agent conventions, 
 
 ## Skill Tiers
 
-Three tiers — pick based on scope:
+Two tiers — pick based on scope:
 
 | Tier | Location | When to use |
 |---|---|---|
@@ -45,6 +45,10 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
+
+## Review Process
+
+Before merging a new skill or significant change, get approval from **at least 4 developers**. Open a PR in `ai-skills` and request reviews — skills affect all repos using the submodule.
 
 ## Adding a New Skill
 
