@@ -26,7 +26,7 @@ description: Create new agent skills with proper structure, progressive disclosu
 ## Skill Structure
 
 ```
-skill-name/
+profinda-skill-name/
 ├── SKILL.md           # Main instructions (required)
 ├── REFERENCE.md       # Detailed docs (if needed)
 ├── EXAMPLES.md        # Usage examples (if needed)
@@ -38,7 +38,7 @@ skill-name/
 
 ```md
 ---
-name: skill-name
+name: profinda-skill-name
 description: Brief description of capability. Use when [specific triggers].
 ---
 
@@ -109,6 +109,7 @@ Split into separate files when:
 
 After drafting, verify:
 
+- [ ] Name uses `profinda-` prefix
 - [ ] Description includes triggers ("Use when...")
 - [ ] SKILL.md under 100 lines
 - [ ] No time-sensitive info
