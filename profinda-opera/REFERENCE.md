@@ -209,7 +209,7 @@ result.failures    # => alias for errors
 # Inside an operation:
 result.output = value           # set output
 result.add_error(:field, msg)   # add single error (halts pipeline after current step)
-result.add_errors(hash)         # add multiple errors; hash format: { field: ["message"] }
+result.add_errors(hash)         # add multiple errors from hash or Dry errors; format: { field: ["message"] }
 result.add_information(hash)    # add metadata (benchmarks, debug info)
 result.executions               # array of executed step names (debugging)
 ```
