@@ -79,7 +79,7 @@ result.output   # => the record
 | `operations :method` | Nested batch ops | Merges all failures, halts if any fail |
 | `within :method do ... end` | Custom yielding wrapper | Break conditions apply inside; cannot contain `always` |
 | `finish_if :method` | Conditional early exit | Truthy = finish (no error) |
-| `success :method` | Non-halting step | Like `step`, but a falsy return does not stop execution. Use for side effects. |
+| `success :method` | Non-halting step | Like `step`, but continues despite errors |
 | `always :method` | Unconditional step | Runs after all steps even on failure; top-level only |
 | `benchmark :label do ... end` | Timed block | Stores timing in `result.information` |
 
