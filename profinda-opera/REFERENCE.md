@@ -209,7 +209,7 @@ result.failures    # => alias for errors
 # Inside an operation:
 result.output = value           # set output
 result.add_error(:field, msg)   # add single error (halts pipeline after current step)
-result.add_errors(hash)         # add multiple errors from hash or Dry errors
+result.add_errors(hash)         # add multiple errors from hash or Dry errors; format: { field: ["message"] }
 result.add_information(hash)    # add metadata (benchmarks, debug info)
 result.executions               # array of executed step names (debugging)
 ```
@@ -362,7 +362,6 @@ end
 ```
 
 Inherit from `CommonEngine::Operation` instead of `Opera::Operation::Base` to get `read_from_replica` for free.
-
 ## Common Patterns
 
 ```ruby
@@ -385,3 +384,51 @@ class MyOp < Opera::Operation::Base
   end
 end
 ```
+
+## Testing Operations
+
+```ruby
+RSpec.describe MyModule::Operations::Create do
+  subject(:result) { described_class.call(params:, dependencies:) }
+
+  let(:account) { create(:account) }
+  let(:requester) { create(:profile, account:) }
+  let(:params) { { name: 'foo' } }
+  let(:dependencies) { { account:, requester: } }
+
+  context 'when params are valid' do
+    it 'succeeds' do
+      expect(result).to be_success
+    end
+
+    it 'returns the created record' do
+      expect(result.output).to be_a(Record)
+      expect(result.output.name).to eq('foo')
+    end
+  end
+
+  context 'when not authorized' do
+    before { allow_any_instance_of(Policy).to receive(:create?).and_return(false) }
+
+    it 'fails with an error' do
+      expect(result).to be_failure
+      expect(result.errors[:base]).to include(I18n.t!('errors.not_authorized'))
+    end
+  end
+
+  context 'when params are invalid' do
+    let(:params) { { name: '' } }
+
+    it 'fails with validation errors' do
+      expect(result).to be_failure
+      expect(result.errors).to have_key(:name)
+    end
+  end
+end
+```
+
+Key assertions:
+- `result.success?` / `result.failure?` — overall pass/fail
+- `result.output` — the return value set by `step :output`
+- `result.errors` — `{ field: ["message"] }` hash
+- `result.executions` — array of step names run (useful for debugging which steps fired)
