@@ -5,15 +5,21 @@ description: ProFinda Jira workflow for agents. Covers PRD in Epic description, 
 
 # ProFinda Jira Workflow
 
-Use `mcp-atlassian` MCP tools for all Jira operations. See [MCP.md](MCP.md) for tool reference and patterns.
+Use `mcp-atlassian` MCP tools for all Jira operations (`jira_get_issue`, `jira_create_issue`, `jira_update_issue`, `jira_transition_issue`, `jira_add_comment`, `jira_get_transitions`, `jira_batch_create_issues`). Always call `jira_get_transitions` before transitioning — IDs vary by current state.
+
+When creating Tasks, these custom fields are required in `additional_fields`:
+```json
+{"fixVersions": [{"id": "10421"}], "customfield_10988": {"id": "13600"}, "customfield_10694": {"id": "11070"}, "customfield_10598": {"id": "10328"}, "customfield_11021": {"id": "11140"}}
+```
+Use `jira_search_fields` + `jira_get_field_options` to discover or verify field option IDs dynamically.
 
 ## When the developer provides a Jira ID
 
 1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`
 2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]`; if found, resume from it
-3. **Move to In Progress** — `jira_transition_issue` (call `jira_get_transitions` first)
-4. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see description structures below). This is the output of the brainstorm and the plan the agent follows.
-5. **Create sub-tasks** — for Stories and Tasks, break the plan into sub-tasks or a checklist (see below)
+3. **Move to In Progress** — `jira_transition_issue`
+4. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
+5. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
 6. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
 
 ## When no Jira ticket exists
@@ -35,12 +41,11 @@ If confirmed, create via `jira_create_issue` then follow the flow above.
 | More than ~4 steps | 3 steps or fewer |
 | Steps span multiple sessions or agents | All steps done in one go |
 
-## Description as spec and plan
+## Description templates
 
-The ticket description is the agent's primary working document — written before implementation starts, refined as understanding grows. It serves as the output of the brainstorm and the plan the agent follows. Never leave it as the original one-liner the developer wrote.
+The ticket description is the agent's primary working document — written before implementation starts, refined as understanding grows. Never leave it as the original one-liner the developer wrote.
 
 ### Epic — living PRD
-
 ```
 ## Goal
 One sentence — what problem does this solve?
@@ -63,13 +68,11 @@ Outstanding decisions that affect scope or design.
 ```
 
 ### Story — spec and acceptance criteria
-
 ```
 ## What and why
 What behaviour is being added and why it matters.
 
 ## Acceptance criteria
-- Given ... When ... Then ...
 - Given ... When ... Then ...
 
 ## Edge cases
@@ -81,7 +84,6 @@ Refined as implementation progresses.
 ```
 
 ### Task — plan and approach
-
 ```
 ## What and why
 What is being changed and why.
