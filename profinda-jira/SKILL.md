@@ -63,7 +63,7 @@ Outstanding decisions that affect scope or design.
 
 ## HANDOFF comment
 
-Post on the Story or Task (not the Epic) when context is running out, switching sessions, or handing off.
+Only when the developer requests it or an explicit agent handoff is happening. Post on the Story or Task, not the Epic.
 
 ```
 [AGENT HANDOFF]
@@ -96,6 +96,6 @@ No PRD files, no agent state files left in the repo. Jira is the record.
 
 - [ ] Completed sub-tasks transitioned to Done
 - [ ] Story/Epic description updated if understanding changed
-- [ ] HANDOFF comment posted if work is incomplete
 - [ ] Ticket in correct state (In Progress / Waiting Review / Closed)
-- [ ] PR URL added as comment if a PR was opened
+
+Post a HANDOFF comment only if the developer asks for it, or if explicitly handing off to another agent or session.
