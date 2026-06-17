@@ -48,41 +48,11 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 
-## Developer setup — mcp-atlassian
+## Developer setup
 
-`profinda-jira` requires the `mcp-atlassian` MCP server configured in your AI client.
+Each skill that requires additional tooling documents its own setup. See the skill's `README.md`:
 
-```bash
-brew install uv   # mcp-atlassian runs via uvx, no permanent install needed
-```
-
-Generate a Jira API token at https://id.atlassian.com/manage-profile/security/api-tokens and set both variables in your shell:
-
-```bash
-# ~/.zshrc.local (or equivalent)
-export JIRA_EMAIL="your.name@profinda.com"
-export JIRA_API_TOKEN="your-token-here"
-```
-
-Add to your OpenCode config (`~/.config/opencode/opencode.json`):
-
-```json
-{
-  "mcp": {
-    "mcp-atlassian": {
-      "command": "uvx",
-      "args": ["mcp-atlassian"],
-      "env": {
-        "JIRA_URL": "https://profinda.atlassian.net",
-        "JIRA_USERNAME": "$JIRA_EMAIL",
-        "JIRA_API_TOKEN": "$JIRA_API_TOKEN"
-      }
-    }
-  }
-}
-```
-
-For Claude Desktop, add the same block to `~/Library/Application Support/Claude/claude_desktop_config.json` under `mcpServers`.
+- [`profinda-jira/README.md`](profinda-jira/README.md) — mcp-atlassian MCP server setup
 
 ## Review Process
 
