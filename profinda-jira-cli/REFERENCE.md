@@ -4,7 +4,7 @@
 
 - URL: `https://profinda.atlassian.net`
 - Project: `SP` | Board ID: `175` | Board type: `scrum`
-- Auth user: `francisco.ruiz@profinda.com`
+- Auth user: `$JIRA_EMAIL` (set in your shell environment)
 
 ## Issue type IDs
 
@@ -110,9 +110,7 @@ Pick the version matching the current quarter. For unplanned/internal work use c
 ### Task
 
 ```bash
-JIRA_TOKEN=$(grep JIRA_API_TOKEN ~/.zshrc.local 2>/dev/null | sed 's/export JIRA_API_TOKEN=//' | tr -d '"' | tr -d "'")
-
-curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue" \
   -d '{
@@ -139,7 +137,7 @@ Required fields: `summary`, `fixVersions`, `customfield_10988` (Pod), `customfie
 ### Story
 
 ```bash
-curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue" \
   -d '{
@@ -163,7 +161,7 @@ curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
 ### Epic
 
 ```bash
-curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue" \
   -d '{
@@ -193,7 +191,7 @@ curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
 ### Bug
 
 ```bash
-curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue" \
   -d '{
@@ -218,7 +216,7 @@ Required fields: `summary`, `priority`, `customfield_10988` (Pod), `customfield_
 ### Sub-task
 
 ```bash
-curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue" \
   -d '{
@@ -237,12 +235,12 @@ Fetch current ADF, merge, then PUT:
 
 ```bash
 # 1. Fetch current description
-CURRENT=$(curl -s -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+CURRENT=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://profinda.atlassian.net/rest/api/3/issue/SP-1234?fields=description" \
   | python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin)['fields']['description']))")
 
 # 2. PUT with updated description
-curl -s -X PUT -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -X PUT -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue/SP-1234" \
   -d "{\"fields\": {\"description\": $UPDATED_ADF}}"

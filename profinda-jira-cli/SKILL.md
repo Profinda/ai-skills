@@ -35,9 +35,8 @@ jira sprint list --state active                  # Active sprints
 `jira issue create` cannot set option-type custom fields (`--custom` sends 400). Use `curl` instead.
 
 ```bash
-JIRA_TOKEN=$(grep JIRA_API_TOKEN ~/.zshrc.local 2>/dev/null | sed 's/export JIRA_API_TOKEN=//' | tr -d '"' | tr -d "'")
-
-curl -s -X POST -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+# Requires JIRA_EMAIL and JIRA_API_TOKEN set in your shell (see README)
+curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://profinda.atlassian.net/rest/api/3/issue" \
   -d '<JSON_PAYLOAD>' \
@@ -75,9 +74,7 @@ jira issue comment add SP-1234 "PR: https://github.com/Profinda/management/pull/
 If a field ID or option ID in REFERENCE.md looks outdated:
 
 ```bash
-JIRA_TOKEN=$(grep JIRA_API_TOKEN ~/.zshrc.local 2>/dev/null | sed 's/export JIRA_API_TOKEN=//' | tr -d '"' | tr -d "'")
-
-curl -s -u "francisco.ruiz@profinda.com:$JIRA_TOKEN" \
+curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://profinda.atlassian.net/rest/api/3/issue/createmeta/SP/issuetypes/<ISSUE_TYPE_ID>" \
   | python3 -c "
 import json, sys

@@ -58,10 +58,11 @@ brew install ankitpokhrel/tap/jira-cli
 jira init   # follow prompts: instance = https://profinda.atlassian.net, project = SP
 ```
 
-Generate a Jira API token at https://id.atlassian.com/manage-profile/security/api-tokens and set it in your shell:
+Generate a Jira API token at https://id.atlassian.com/manage-profile/security/api-tokens and set both variables in your shell:
 
 ```bash
 # ~/.zshrc.local (or equivalent)
+export JIRA_EMAIL="your.name@profinda.com"
 export JIRA_API_TOKEN="your-token-here"
 ```
 
