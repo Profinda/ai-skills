@@ -1,4 +1,8 @@
-# jira-cli Reference — Field IDs and Payload Templates
+# Field IDs and jira-cli Reference
+
+> For agents: field option IDs in this file can be passed in `additional_fields` when using `jira_create_issue` or `jira_update_issue` via the MCP. Use `jira_search_fields` and `jira_get_field_options` to verify or discover values dynamically.
+>
+> For developers: the `jira-cli` commands and `curl` templates below are for manual terminal use outside of an agent session.
 
 ## Instance
 
