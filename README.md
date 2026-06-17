@@ -41,21 +41,19 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | Skill | Description |
 |---|---|
 | `profinda-adr` | Create and maintain Architecture Decision Records |
-| `profinda-jira` | Jira workflow: PRD in Epic, Stories, sub-tasks as progress tracker, HANDOFF comments |
-| `profinda-jira-cli` | jira-cli and REST API command reference — field IDs, payload templates, transitions |
+| `profinda-jira` | Jira workflow: PRD in Epic, Stories, sub-tasks as progress tracker, HANDOFF comments. Uses `mcp-atlassian` MCP. |
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
 | `profinda-prd` | Write a Product Requirements Document from conversation context |
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 
-## Developer setup — jira-cli
+## Developer setup — mcp-atlassian
 
-`profinda-jira-cli` and `profinda-jira` require `jira-cli` to be installed locally.
+`profinda-jira` requires the `mcp-atlassian` MCP server configured in your AI client.
 
 ```bash
-brew install ankitpokhrel/tap/jira-cli
-jira init   # follow prompts: instance = https://profinda.atlassian.net, project = SP
+brew install uv   # mcp-atlassian runs via uvx, no permanent install needed
 ```
 
 Generate a Jira API token at https://id.atlassian.com/manage-profile/security/api-tokens and set both variables in your shell:
@@ -66,11 +64,25 @@ export JIRA_EMAIL="your.name@profinda.com"
 export JIRA_API_TOKEN="your-token-here"
 ```
 
-Verify setup:
+Add to your OpenCode config (`~/.config/opencode/opencode.json`):
 
-```bash
-jira me   # should return your Jira display name
+```json
+{
+  "mcp": {
+    "mcp-atlassian": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "https://profinda.atlassian.net",
+        "JIRA_USERNAME": "$JIRA_EMAIL",
+        "JIRA_API_TOKEN": "$JIRA_API_TOKEN"
+      }
+    }
+  }
+}
 ```
+
+For Claude Desktop, add the same block to `~/Library/Application Support/Claude/claude_desktop_config.json` under `mcpServers`.
 
 ## Review Process
 

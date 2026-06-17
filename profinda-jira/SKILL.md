@@ -5,28 +5,28 @@ description: ProFinda Jira workflow for agents. Covers PRD in Epic description, 
 
 # ProFinda Jira Workflow
 
-Load `profinda-jira-cli` for the CLI commands and REST API field reference needed to execute the steps below.
+Use `mcp-atlassian` MCP tools for all Jira operations. See [MCP.md](MCP.md) for tool reference and patterns.
 
 ## When the developer provides a Jira ID
 
-1. **Read the ticket** — `jira issue view SP-XXXX` to understand the scope
-2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]` block; if found, resume from it
-3. **Move to In Progress** — `jira issue move SP-XXXX "In Progress"`
-4. **If Epic**: treat the description as the living PRD — read it, do not overwrite, only append/refine
-5. **If Story**: read acceptance criteria; create sub-tasks for your planned work units (see below)
-6. **If Task**: create a sub-task checklist or sub-tasks depending on complexity (see below)
-7. **Proceed with implementation** — update sub-task statuses as you go
+1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`
+2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]`; if found, resume from it
+3. **Move to In Progress** — `jira_transition_issue` (call `jira_get_transitions` first)
+4. **If Epic**: treat description as the living PRD — read it, refine sections, never replace wholesale
+5. **If Story**: read acceptance criteria; create sub-tasks for planned work units
+6. **If Task**: create sub-tasks or use description checklist depending on complexity (see below)
+7. **Proceed with implementation** — transition sub-tasks as you go
 
 ## When no Jira ticket exists
 
-Before starting any non-trivial work, offer to create a ticket:
+Before starting any non-trivial work, offer to create one:
 
 > "No Jira ticket found. Should I create one in SP?
-> - **User Story** — if this is a user-facing feature or behaviour change
-> - **Task** — if this is technical work, refactoring, or infrastructure
+> - **User Story** — user-facing feature or behaviour change
+> - **Task** — technical work, refactoring, or infrastructure
 > Which fits better, or should I just proceed without one?"
 
-If the user confirms, load `profinda-jira-cli` and create the issue via REST API. Then follow the "developer provides a Jira ID" flow above.
+If confirmed, create via `jira_create_issue` then follow the flow above.
 
 ## Sub-tasks vs. description checklist
 
@@ -38,11 +38,11 @@ If the user confirms, load `profinda-jira-cli` and create the issue via REST API
 
 ## Epic as living PRD
 
-The Epic description is the PRD. Structure it as:
+Structure the Epic description as:
 
 ```
 ## Goal
-One sentence. What problem does this solve?
+One sentence — what problem does this solve?
 
 ## Non-goals
 What is explicitly out of scope.
@@ -51,26 +51,19 @@ What is explicitly out of scope.
 Measurable outcomes.
 
 ## User Stories
-Links to child stories: SP-101, SP-102, ...
+SP-101, SP-102, ...
 
 ## Architecture notes
 Key decisions, constraints, services involved.
-No file paths or code snippets — refer to Jira sub-tasks or PRs for specifics.
+No file paths or code snippets.
 
 ## Open questions
 Outstanding decisions that affect scope or design.
 ```
 
-Update this description as understanding grows — never replace it wholesale, only refine sections.
-
 ## HANDOFF comment
 
-Post a HANDOFF comment when:
-- Context window is running out
-- Switching to a different session or worktree
-- Handing off to another agent or developer
-
-Format (post as a comment on the Story or Task, not the Epic):
+Post on the Story or Task (not the Epic) when context is running out, switching sessions, or handing off.
 
 ```
 [AGENT HANDOFF]
@@ -79,37 +72,30 @@ Branch: feature/SP-XXXX-short-description
 Worktree: .worktrees/SP-XXXX-short-description (if applicable)
 
 Completed:
-- SP-XXXX (sub-task title)
-- SP-XXXY (sub-task title)
+- SP-XXXX sub-task title
 
 Next:
-- SP-XXXZ — short description of what to do and why
+- SP-XXXY what to do and why
 
 Context:
-Key decisions made this session that are not obvious from the code or ticket:
-- e.g. "Chose X over Y because of Z constraint in lib/foo.rb:42"
-- e.g. "Auth flow deliberately untouched — see SP-99 for context"
+- Chose X over Y because of Z constraint in lib/foo.rb:42
 
 Blockers:
-- None / describe any blockers
+- None
 ```
 
-Any agent or developer reading this comment can resume without re-reading the full conversation.
-
 ## Commit discipline
-
-Every commit references the Jira ID in brackets at the end:
 
 ```
 Add rate limiter middleware [SP-1234]
 ```
 
-No PRD files, no agent state files, no TODO comments left in the repo. Jira is the record.
+No PRD files, no agent state files left in the repo. Jira is the record.
 
 ## Session end checklist
 
-- [ ] All completed sub-tasks moved to Done
+- [ ] Completed sub-tasks transitioned to Done
 - [ ] Story/Epic description updated if understanding changed
 - [ ] HANDOFF comment posted if work is incomplete
-- [ ] Ticket moved to correct state (`In Progress` / `Waiting Review` / `Closed`)
+- [ ] Ticket in correct state (In Progress / Waiting Review / Closed)
 - [ ] PR URL added as comment if a PR was opened
