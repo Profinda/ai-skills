@@ -118,6 +118,7 @@ always :log_info            # 11. Always executes no matter what
 | Missing `attr_reader` for auto-populated context | Declare `attr_reader :schema_output` in context block |
 | `within` wrapper method not yielding | Nested steps silently skipped; wrapper must always `yield` |
 | Using `always` inside `within` or `transaction` | `always` is top-level only |
+| Using `step` for writing history events | Use `operation` for writing history events |
 
 ## More Detail
 
