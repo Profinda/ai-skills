@@ -90,14 +90,14 @@ validate :schema            # 1. Validate input
 operation :find_*           # 2. Load required data
 finish_if :guard?           # 3. Early exit guards
 within :read_replica do
-  step :authorize         # 4. Check permissions
+  step :authorize           # 4. Check permissions
 end
 step :prepare_*             # 5. Normalize/prepare data
 transaction do              # 6. Transactional writes
   step :persist
   operation :nested_write
 end
-step :write_history         # 7. History tracking (post-transaction)
+operation :write_history    # 7. History tracking (post-transaction)
 step :broadcast             # 8. Event broadcasting (post-transaction)
 step :audit                 # 9. Audit logging
 step :output                # 10. Set result.output (always last)
@@ -118,6 +118,7 @@ always :log_info            # 11. Always executes no matter what
 | Missing `attr_reader` for auto-populated context | Declare `attr_reader :schema_output` in context block |
 | `within` wrapper method not yielding | Nested steps silently skipped; wrapper must always `yield` |
 | Using `always` inside `within` or `transaction` | `always` is top-level only |
+| Using `step` for writing history events | Use `operation` for writing history events |
 
 ## More Detail
 

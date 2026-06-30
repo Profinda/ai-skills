@@ -116,7 +116,7 @@ module ModuleName
         step :persist
         operation :create_associations
       end
-      step :write_history
+      operation :write_history
       step :broadcast
       success :notify_optional     # non-halting: pipeline continues even if errors added
       benchmark do
