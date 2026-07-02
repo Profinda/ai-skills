@@ -1,0 +1,8 @@
+{
+  "name": "profinda",
+  "description": "Profinda shared skills plugin",
+  "owner": {
+    "name": "Profinda"
+  },
+  "plugins": [{ "name": "profinda", "source": "./" }]
+}

@@ -80,6 +80,26 @@ git clone --recurse-submodules <repo-url>
 git submodule init && git submodule update
 ```
 
+### Configure settings.json
+
+After adding the submodule, add this to `.claude/settings.json` so Claude Code loads skills from the shared directory and enables the `profinda` plugin namespace. It is essential to make skills appear in Claude Code:
+
+```json
+{
+  "enabledPlugins": {
+    "profinda@profinda": true
+  },
+  "extraKnownMarketplaces": {
+    "profinda": {
+      "source": {
+        "source": "directory",
+        "path": ".claude/skills/shared"
+      }
+    }
+  }
+}
+```
+
 ### Update to latest shared skills
 
 ```bash
