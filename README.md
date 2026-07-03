@@ -88,6 +88,22 @@ git add .claude/skills/shared
 git commit -m "Bump ai-skills submodule"
 ```
 
+### Make shared skills available in Claude
+
+Shared skills live in `.claude/skills/shared/` but must be symlinked to `.claude/skills/` to appear in Claude.
+
+Run this script once after cloning:
+
+```bash
+for dir in .claude/skills/shared/*/; do
+  ln -s "shared/$(basename "$dir")" ".claude/skills/$(basename "$dir")"
+done
+```
+
+This creates symlinks so each skill in `shared/` is accessible as a direct child of `.claude/skills/`.
+
+**Note:** Add these symlinks to your repo's `.gitignore` so they stay local.
+
 ### Add a repo-local skill
 
 Place it directly in `.claude/skills/<skill-name>/` — no submodule needed. It will be picked up by AI client automatically.
