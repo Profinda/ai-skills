@@ -1,9 +1,9 @@
 ---
 name: profinda-code-review
-description: Performs code review of developer changes in three modes: quick (bugs, security, regressions), full (spec, correctness, architecture, tests), and fix (propose and apply fixes with re-review). Use when user invokes /profinda-review, asks for a code review, mentions "review my changes", or uses the words "quick review", "full review", or "review fix".
+description: Performs code review in three modes: quick (bugs, security, regressions), full (spec, correctness, naming, tests, linting, JIRA ticket), and fix (propose and apply fixes with re-review). Loads project-specific rules from $REPO/AI_REVIEW.md when present. Use when user invokes /profinda-review, asks for a code review, mentions "review my changes", or uses the words "quick review", "full review", or "review fix".
 ---
 
-# ProFinda Code Review
+# Code Review
 
 ## Quick start
 
@@ -15,7 +15,18 @@ BASE=$(git merge-base HEAD "origin/$TARGET" 2>/dev/null || git merge-base HEAD m
 git diff "$BASE"
 ```
 
-Scope includes: all committed changes since branch diverged, staged changes, unstaged changes to tracked files, and related context (tests, migrations, public interfaces).
+Scope includes: all committed changes since branch diverged, staged changes, unstaged changes to tracked files, and related context (tests, config, public interfaces).
+
+---
+
+## Project-specific rules
+
+**Before running any review**, check whether the repository contains a file at `$REPO/AI_REVIEW.md` (i.e. `AI_REVIEW.md` in the repository root).
+
+- If it exists: read it fully and merge its rules into every applicable review category below. Project rules **take precedence** over generic defaults when they conflict.
+- If it does not exist: proceed with generic defaults only.
+
+> `AI_REVIEW.md` is the per-repository convention file. Teams use it to document stack-specific patterns, architectural decisions, naming conventions, required linters, and anything else reviewers must know.
 
 ---
 
@@ -26,10 +37,10 @@ Scope includes: all committed changes since branch diverged, staged changes, uns
 Focus only on high-impact issues. Output at most a handful of comments.
 
 Check:
-- Real bugs (nil dereferences, off-by-one, wrong conditionals)
-- Security (mass assignment, SQL injection, missing auth, exposed secrets)
-- Regressions (broken existing behaviour, missing DB index for new queries)
-- Critical missing tests (untested happy path or error path of changed code)
+- **Bugs** — nil/null dereferences, off-by-one errors, wrong conditionals, unreachable code
+- **Security** — injection vectors, missing auth, exposed secrets, unsafe deserialization
+- **Regressions** — broken existing behaviour, missing DB index for new queries, removed public API without deprecation
+- **Critical missing tests** — untested happy path or error path of changed code
 
 Skip: style, naming, architecture, minor code smells.
 
@@ -42,15 +53,18 @@ Format output as a short numbered list. Mark severity: `[critical]` or `[warning
 Comprehensive review. Group findings by category.
 
 Check (in order):
-1. **Spec & correctness** - does the code do what the ticket/spec requires?
-2. **Bugs** - same as quick, but exhaustive
-3. **Security** - auth, authorisation policies, input validation, secrets
-4. **Architecture** - engine isolation (engines must not access main-app models directly), correct use of Domain interfaces, Operations, Actions, Serializers
-5. **Standards** - ProFinda conventions (see [REFERENCE.md](REFERENCE.md)), rubocop rules, frozen string literal, line/method length
-6. **Code smells** - duplication, god objects, leaky abstractions, N+1 queries
-7. **Tests** - coverage of edge cases, use of FactoryBot (no stubs for feature flags), spec organisation, BetterSpecs compliance
 
-Format output grouped by category. Each finding: file + line reference, explanation, suggested fix.
+1. **Bugs** — exhaustive: logic errors, edge cases, error handling, resource leaks
+2. **Security** — auth & authorisation, input validation, secrets, sensitive data in logs, dependency vulnerabilities
+3. **Typos & misspellings** — identifiers, comments, string literals, documentation
+4. **Naming & consistency** — variable/function/class names follow project conventions; consistent terminology across the changed files
+5. **Design & architecture** — module boundaries respected, single responsibility, no leaky abstractions, correct layer for the logic
+6. **Spec & correctness** — does the code match the ticket/requirement? If a JIRA ticket number is available (from branch name, commit message, or PR description), verify the implementation covers the acceptance criteria
+7. **Linting** — check against the linter configured in the project (look for `.rubocop.yml`, `eslint.config.*`, `pyproject.toml`, `.flake8`, `biome.json`, etc.). Flag any rule violations you can detect statically; note which rules apply
+8. **Tests** — coverage of happy path and error/edge cases, test isolation, no flaky patterns
+9. **Project-specific rules** — anything defined in `AI_REVIEW.md` that does not fit the above categories
+
+Format: group findings by category. Each finding: file + line reference, explanation, suggested fix.
 
 ---
 
@@ -68,14 +82,8 @@ Apply fixes after a review. Use this workflow:
    Proceed? (yes / adjust plan)
    ```
 4. After confirmation, apply fixes one area at a time.
-5. After all fixes, run tests:
-   ```bash
-   bundle exec rspec <affected spec files>
-   ```
-6. Run rubocop on changed files:
-   ```bash
-   bundle exec rubocop <changed files>
-   ```
+5. After all fixes, run the project's test suite on affected files.
+6. Run the project's linter on changed files.
 7. Perform a second `/profinda-review quick` pass on the applied changes and report any remaining issues.
 
 ---
@@ -99,12 +107,6 @@ If the diff is very large (>500 changed lines), ask the user whether to narrow s
 
 ---
 
-## ProFinda-specific review checklist
+## Generic review checklist
 
-See [REFERENCE.md](REFERENCE.md) for detailed checklists covering:
-- Engine isolation rules
-- Operations & steps
-- Domain interface usage
-- Policy registration
-- Locale file sync
-- Feature flags in tests
+See [REFERENCE.md](REFERENCE.md) for detailed, language-agnostic checklists covering all review categories.
