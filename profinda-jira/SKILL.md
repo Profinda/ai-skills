@@ -21,7 +21,7 @@ Use `jira_search_fields` + `jira_get_field_options` to discover or verify field 
    - Read the `## Acceptance criteria` section and description.
    - If AC are missing or thin, say so plainly and ask the developer to clarify. Do NOT write acceptance criteria back to Jira.
    - Restate the acceptance criteria in your own words.
-   - **HARD GATE:** ask "Is this understanding correct? (yes / correct me)". A worktree may be created, but do not write a plan or transition the ticket until the developer confirms.
+   - **HARD GATE:** ask "Is this understanding correct? (yes / correct me)", then STOP and wait. Until the developer confirms, do not investigate the codebase (no file reads, grep, or explore), write a plan, or transition the ticket. Creating a worktree is allowed.
 4. **Move to In Progress** — `jira_transition_issue`
 5. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
 6. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
