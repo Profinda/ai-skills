@@ -17,10 +17,15 @@ Use `jira_search_fields` + `jira_get_field_options` to discover or verify field 
 
 1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`
 2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]`; if found, resume from it
-3. **Move to In Progress** — `jira_transition_issue`
-4. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
-5. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
-6. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
+3. **Confirm understanding of acceptance criteria** (read-only — uses only `jira_get_issue`):
+   - Read the `## Acceptance criteria` section and description.
+   - If AC are missing or thin, say so plainly and ask the developer to clarify. Do NOT write acceptance criteria back to Jira.
+   - Restate the acceptance criteria in your own words.
+   - **HARD GATE:** ask "Is this understanding correct? (yes / correct me)". A worktree may be created, but do not write a plan or transition the ticket until the developer confirms.
+4. **Move to In Progress** — `jira_transition_issue`
+5. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
+6. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
+7. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
 
 ## When no Jira ticket exists
 
