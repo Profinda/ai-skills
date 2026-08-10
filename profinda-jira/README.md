@@ -18,7 +18,6 @@ For **OpenCode** (`~/.config/opencode/opencode.json`):
 
 ```jsonc
 {
-  "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "mcp-atlassian": {
       "type": "local",
