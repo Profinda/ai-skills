@@ -14,11 +14,30 @@ export JIRA_EMAIL="your.name@profinda.com"
 export JIRA_API_TOKEN="your-token-here"
 ```
 
-Add to your OpenCode config (`~/.config/opencode/opencode.json`):
+For **OpenCode** (`~/.config/opencode/opencode.json`):
+
+```jsonc
+{
+  "mcp": {
+    "mcp-atlassian": {
+      "type": "local",
+      "command": ["uvx", "mcp-atlassian"],
+      "enabled": true,
+      "environment": {
+        "JIRA_URL": "https://profinda.atlassian.net",
+        "JIRA_USERNAME": "{env:JIRA_EMAIL}",
+        "JIRA_API_TOKEN": "{env:JIRA_API_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+For **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
-  "mcp": {
+  "mcpServers": {
     "mcp-atlassian": {
       "command": "uvx",
       "args": ["mcp-atlassian"],
@@ -31,5 +50,3 @@ Add to your OpenCode config (`~/.config/opencode/opencode.json`):
   }
 }
 ```
-
-For Claude Desktop, add the same block to `~/Library/Application Support/Claude/claude_desktop_config.json` under `mcpServers`.

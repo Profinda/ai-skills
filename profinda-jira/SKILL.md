@@ -17,10 +17,23 @@ Use `jira_search_fields` + `jira_get_field_options` to discover or verify field 
 
 1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`
 2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]`; if found, resume from it
-3. **Move to In Progress** — `jira_transition_issue`
-4. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
-5. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
-6. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
+3. **Restate the acceptance criteria** (read-only — uses only `jira_get_issue`):
+   - Read the `## Acceptance criteria` section and description.
+   - If AC are missing or thin, say so plainly and ask the developer to clarify. Do NOT write acceptance criteria back to Jira.
+   - Restate the acceptance criteria in your own words.
+4. **AC CONFIRMATION GATE — STOP HERE** (own step; not done when you finish restating):
+   - End your turn with exactly this, nothing after: **Is this understanding correct? (yes / correct me)**
+   - No tool calls in the same turn. Wait for the developer's reply.
+   - Until they confirm: do NOT investigate the codebase, plan, or transition the ticket. Allowed: create a worktree, read the ticket + linked docs.
+   - Escape hatch: if they say "skip the gate" / "just go", proceed.
+
+   Red flags = you're about to skip. All mean STOP and ask:
+   "explore codebase first" · "delegate explore agents" · "understand the goal first" · "AC are obvious" · "I already restated" · "I'll plan while I wait"
+
+5. **Move to In Progress** — `jira_transition_issue`
+6. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
+7. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
+8. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
 
 ## When no Jira ticket exists
 
