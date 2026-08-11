@@ -17,15 +17,36 @@ Use `jira_search_fields` + `jira_get_field_options` to discover or verify field 
 
 1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`
 2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]`; if found, resume from it
-3. **Confirm understanding of acceptance criteria** (read-only — uses only `jira_get_issue`):
+3. **Restate the acceptance criteria** (read-only — uses only `jira_get_issue`):
    - Read the `## Acceptance criteria` section and description.
    - If AC are missing or thin, say so plainly and ask the developer to clarify. Do NOT write acceptance criteria back to Jira.
    - Restate the acceptance criteria in your own words.
-   - **HARD GATE:** ask "Is this understanding correct? (yes / correct me)", then STOP and wait. Until the developer confirms, do not investigate the codebase (no file reads, grep, or explore), write a plan, or transition the ticket. Creating a worktree is allowed.
-4. **Move to In Progress** — `jira_transition_issue`
-5. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
-6. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
-7. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
+4. **AC CONFIRMATION GATE — STOP HERE** (this is its own step; it is not "done" when you finish restating):
+   - Your turn MUST end with this exact question and nothing after it:
+     > **Is this understanding correct? (yes / correct me)**
+   - **Do NOT call any tool in the same turn as the gate question.** End the turn. Wait for the developer's reply.
+   - Until the developer replies "yes" (or equivalent confirmation), you MUST NOT:
+     - investigate the application codebase (no file reads, grep, glob, or explore/subagent dispatch),
+     - write or draft a plan,
+     - transition the ticket or move it to In Progress.
+   - Allowed before confirmation: creating a git worktree, reading the Jira ticket and its linked design docs.
+   - **Escape hatch:** if the developer explicitly says "skip the gate" / "just go", proceed without waiting.
+
+   **Red flags — these thoughts mean you are about to skip the gate. STOP and ask the question instead:**
+
+   | Thought | Reality |
+   |---|---|
+   | "First understand the goal, then explore" | Restating IS the goal-understanding. The gate comes next. STOP. |
+   | "Need to explore the codebase first" | Not until confirmed. STOP. |
+   | "Let me delegate explore agents in parallel" | That is codebase investigation. STOP. |
+   | "AC are obvious, I can proceed" | Only the developer decides that. Ask, or wait for 'skip the gate'. |
+   | "I already restated, so step 3 is done" | Restating ≠ confirmation. Step 4 (the gate) is still pending. STOP. |
+   | "I'll just plan while I wait" | Planning is blocked until confirmed. STOP. |
+
+5. **Move to In Progress** — `jira_transition_issue`
+6. **Write the spec into the description** — before any implementation, update the ticket description with your understanding of the problem, the plan, and key decisions (see templates below). This is the output of the brainstorm and the plan the agent follows.
+7. **Create sub-tasks** — break the plan into sub-tasks or a checklist (see below)
+8. **Proceed with implementation** — transition sub-tasks as you go, refine the description as understanding evolves
 
 ## When no Jira ticket exists
 
