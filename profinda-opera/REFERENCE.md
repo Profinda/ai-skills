@@ -205,6 +205,18 @@ result.output      # => return value (nil if not set)
 result.output!     # => return value OR raises Opera::Operation::Result::OutputError
 result.errors      # => { field: ["message"] }
 result.failures    # => alias for errors
+```
+
+**Prefer `output!` over `output` whenever possible.** Use `output!` when a failure is not an expected outcome (e.g. internal lookups, chaining one operation's result into another). It fails loudly with `Opera::Operation::Result::OutputError` and the underlying errors, instead of silently returning `nil` and causing a cryptic `NoMethodError` downstream. Only use plain `output` when you explicitly handle the failure/`nil` case (typically after checking `result.success?`).
+
+```ruby
+# Good — failure is unexpected; fail loudly:
+ids = Attributes::Domain::CustomTypes.find_all(params:, account_id:, serializer: nil).output!.map(&:id)
+
+# Good — failure explicitly handled:
+result = MyOperation.call(...)
+return handle_errors(result.errors) unless result.success?
+record = result.output
 
 # Inside an operation:
 result.output = value           # set output

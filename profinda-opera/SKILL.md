@@ -119,6 +119,7 @@ always :log_info            # 11. Always executes no matter what
 | `within` wrapper method not yielding | Nested steps silently skipped; wrapper must always `yield` |
 | Using `always` inside `within` or `transaction` | `always` is top-level only |
 | Using `step` for writing history events | Use `operation` for writing history events |
+| Using `.output` when failure is unexpected | Prefer `.output!` — it raises `OutputError` instead of returning `nil` (cryptic downstream errors). Use `.output` only when you handle the `nil`/failure case. See [REFERENCE.md](REFERENCE.md). |
 
 ## More Detail
 
