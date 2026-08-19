@@ -42,7 +42,8 @@ Legend: **R** required · O optional · — not on create screen (still editable
 | 1.10 | Fix versions | O | R | R | O | none |
 | 1.11 | Environment (10598) | — | R | R | O | none |
 | 1.12 | Tshirt size (10711) | R | O | O | — | Epic sizing field |
-| 1.13 | Story Points (10022 / 10529) | — | **R** | **R** | — | **Require on Story & Task; remove from Sub-task** — estimate lives on the parent |
+| 1.13 | Sum of Story Points (10599) | — | **R** | **R** | — | **Estimate field. Require on Story & Task; not on Sub-task.** See Change 6 + open question on custom vs built-in |
+| 1.13b | Story Points (10022) — legacy | — | — | — | — | **Drop.** Null everywhere, hidden on Task |
 | 1.14 | Release notes (10578) | — | O | **R if customer-facing** | — | **Conditional-required on Task** (Change 3) |
 | 1.15 | Customer (10548) | O | O | O | — | none |
 | 1.16 | Team (10300) | O | O | O | O | none |
@@ -60,8 +61,7 @@ fully functional in the workflow — they just stop cluttering creation.
 | 2.2 | API/HAL Points | Estimation |
 | 2.3 | QA Points | Estimation |
 | 2.4 | Integration Points | Estimation |
-| 2.5 | Data S&A Points | Estimation |
-| 2.6 | Sum of Story Points | Rollup — never entered by hand |
+| 2.5 | Data S&A Points | Estimation (discipline split) |
 | 2.7 | QA Failure Reasons | Set during QA, not creation |
 | 2.8 | Blocked Cause | Set when blocked |
 | 2.9 | Product Review | Set during review |
@@ -85,9 +85,9 @@ needs; remove all estimation and reporting fields from it.
 
 | # | Field | Action on Sub-task |
 |---|---|---|
-| 2b.1 | Story Points (10022) | **Remove** — estimate lives on the parent Task/Story |
+| 2b.1 | Sum of Story Points (10599) | **Remove** — estimate lives on the parent Task/Story |
 | 2b.2 | UI Points / API/HAL Points / QA Points / Integration Points / Data S&A Points | Remove |
-| 2b.3 | Sum of Story Points | Remove (rollup) |
+| 2b.3 | Story Points (10022) — legacy | Remove — field is being dropped anyway |
 | 2b.4 | Tshirt size | Remove |
 | 2b.5 | AI Service, Environment, Fix versions, Customer | Remove — inherited from parent |
 
@@ -132,17 +132,59 @@ by the Product + Lead Engineer, recorded in the Epic sign-off table.
 
 ---
 
-## Change 6 — Story Points: mandatory on Task/Story, absent on Sub-task
+## Change 6 — Estimate mandatory on Task/Story, absent on Sub-task
 
 Rationale: every deliverable unit (Story, Task) must be estimated before it enters
-a sprint — so Story Points becomes **required** on Story and Task. A Sub-task is
-just a step within an estimated parent, so it should **not** carry its own points
-(double-counting and noise). Story Points is therefore **removed from the Sub-task
-create screen** entirely (see Change 2b).
+a sprint. A Sub-task is just a step within an estimated parent, so it should not
+carry its own estimate (double-counting and noise).
+
+The estimate field **today** is the custom **`Sum of Story Points` (10599)**
+(the legacy built-in `Story Points` 10022 is null everywhere and is being
+dropped). See the open question below before finalising which field.
 
 Action:
-- Make **Story Points (10022)** required on Story and Task create/transition.
-- Remove **Story Points (10022)** from the Sub-task screen.
+- Make **`Sum of Story Points` (10599)** required on Story and Task.
+- Remove it (and all point fields) from the Sub-task screen (Change 2b).
+- Drop the legacy `Story Points` (10022) from all screens.
+
+### Change 6 — OPEN QUESTION / honest challenge: custom field vs built-in
+
+Why does the custom `Sum of Story Points` exist instead of Jira's built-in
+Story Points? The usual reason is that built-in Story Points **cannot roll up**
+sub-task/discipline estimates to the parent, and can't hold a per-discipline
+split (UI / API-HAL / QA / Integration / Data S&A). **But in our instance the
+sum is maintained MANUALLY** — nothing computes it automatically. That removes
+the main justification.
+
+If we type the number by hand anyway, we could switch to **built-in Story
+Points** and regain **native velocity / burndown / sprint reports** — which only
+read the built-in estimation field. With the custom field, those native reports
+are blank/wrong unless rebuilt in dashboards.
+
+Decision needed from the PM team:
+- **A) Keep `Sum of Story Points`** — consistent with historical data + discipline
+  splits; accept native agile reports don't read it.
+- **B) Move to built-in Story Points** — regain native reporting; decide what
+  happens to discipline splits and whether to backfill history.
+
+Templates use `Sum of Story Points` for now to stay consistent. Not settled.
+
+---
+
+## Change 7 — "In Progress" automation (assignee + points): exempt Sub-tasks
+
+Finding (investigated via REST API): the `Work Commenced → In Progress`
+transition (id 51) has **no field-required validators** — so the "must have
+assignee + points" check is a **Jira Automation rule**, not a workflow
+validator. It is **not** currently hard-blocking Sub-tasks (e.g. SP-10365 is a
+Sub-task In Progress with no points). Automation config is not exposed via API;
+the admin finds it under **Project settings → Automation**.
+
+Action (keeps the check on Task/Story, removes it from Sub-task):
+- **Assignee**: required on all issue types entering In Progress (unchanged).
+- **Estimate (`Sum of Story Points`)**: required on **Story/Task only**. Add a
+  condition **Issue type is not Sub-task** to the points branch of the rule so
+  Sub-tasks are exempt.
 
 ---
 
@@ -167,7 +209,10 @@ redesign) and train teams/agents to use links.
 | 3 — Release Notes conditional-required | PM lead | ☐ | | |
 | 4 — Epic lifecycle gate | PM lead + Eng lead | ☐ | | |
 | 5 — Dependencies as links | Eng lead | ☐ | | |
-| 6 — Story Points required on Task/Story, removed from Sub-task | PM lead | ☐ | | |
+| 6 — Estimate required on Task/Story, removed from Sub-task | PM lead | ☐ | | |
+| 6 (open q) — Custom `Sum of Story Points` vs built-in Story Points | PM lead + Eng lead | ☐ | | |
+| 7 — "In Progress" automation exempts Sub-tasks | PM lead + Jira admin | ☐ | | |
 
 Once approved, the Jira admin implements Changes 1–4 in the SP project screen
-schemes and workflow; Change 5 is enforced via the templates and skills.
+schemes and workflow; Change 7 is an Automation-rule edit; Change 5 is enforced
+via the templates and skills.

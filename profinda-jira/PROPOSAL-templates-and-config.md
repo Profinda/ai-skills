@@ -44,7 +44,7 @@ description. Anything Jira structures natively should NOT be re-typed in prose:
 |---|---|---|
 | Release notes | `customfield_10578` Release notes | Use the field |
 | Estimated complexity / t-shirt | `customfield_10711` Tshirt size | Use the field |
-| Story points / point breakdown | Story Points + point fields | Use the fields |
+| Estimate | Sum of Story Points (10599) | Use the field (see open question 7.6) |
 | Product contact / PM | `customfield_10602` Product Manager | Use the field |
 | Dependencies / related tickets | Jira issue links | Use links |
 | Fix version | `fixVersions` | Use the field |
@@ -276,10 +276,10 @@ How to prove this step works (tests, manual check, command).
 Sub-task **status** is the progress signal: To Do → In Progress → In Review → Done.
 No separate progress doc.
 
-A Sub-task carries **no estimation of its own** — no Story Points, no t-shirt, no
-point-breakdown fields. The parent Task/Story holds the estimate. Its create
-screen is stripped to the minimum (Summary, Description, Parent, Priority, Team).
-See Jira config Change 2b / Change 6.
+A Sub-task carries **no estimation of its own** — no points, no t-shirt. The
+estimate is entered directly on the parent Task/Story (`Sum of Story Points`,
+10599). The Sub-task create screen is stripped to the minimum (Summary,
+Description, Parent, Priority, Team). See Jira config Change 2b / Change 6.
 
 ---
 
@@ -320,8 +320,9 @@ Legend: **R** required · O optional · — hide from create screen (still usabl
 | AI Service (11668) | R | O | O | — | Keep on Epic; expose optional on Story/Task |
 | Fix versions | O | R | R | O | Release train |
 | Environment (10598) | — | R | R | O | |
-| Tshirt size (10711) | R | O | O | — | Epic sizing; Story/Task use Story Points |
-| Story Points (10022/10529) | — | R | R | — | **Required on Story/Task; removed from Sub-task** — the parent carries the estimate |
+| Tshirt size (10711) | R | O | O | — | Epic sizing; Story/Task carry the estimate |
+| Sum of Story Points (10599) | — | R | R | — | **Required estimate on Story/Task; not on Sub-task** — see open question 7.6 (why a custom field vs built-in) |
+| Story Points (10022) — legacy | — | — | — | — | **Dropped from the model** — null everywhere, hidden on Task |
 | Release notes (10578) | — | O | R-if-customer-facing | — | Task gate (see 4.3) |
 | Customer (10548) | O | O | O | — | |
 | Team (10300) | O | O | O | O | |
@@ -332,7 +333,7 @@ These are workflow/reporting fields that pollute creation and should appear only
 when relevant in the workflow, not at create time:
 
 - UI Points, API/HAL Points, QA Points, Integration Points, Data S&A Points
-- Sum of Story Points (rollup — never entered by hand)
+  (discipline splits — used during refinement/planning, not at create time)
 - QA Failure Reasons, Blocked Cause, Product Review, Escalate to
 - Department, Delivery Project, Target Environment, Product Involvement
 - Test Plan Status, File Expected Date, Current behaviour
@@ -344,7 +345,7 @@ when relevant in the workflow, not at create time:
 For each, the **field** is the source of truth; remove the equivalent row from
 the description template (already reflected in section 4):
 
-- Release notes, T-shirt size, Story points, Product Manager, Fix version,
+- Release notes, T-shirt size, Sum of Story Points, Product Manager, Fix version,
   Requires Documentation, Dependencies (→ links).
 
 ---
@@ -375,3 +376,51 @@ tables even though a status transition also exists.
 3. Confirm removing reporting fields from the create screen (5.3).
 4. Confirm Release Notes becomes conditionally-required on Task (5.2).
 5. Confirm dual sign-off (status transition + template row) — section 6.
+6. Confirm the "In Progress" automation scope (section 7.5).
+7. **Decide the estimation field** (section 7.6) — keep custom `Sum of Story
+   Points`, or move to Jira's built-in Story Points.
+
+### 7.5 The "In Progress" automation (assignee + points)
+
+Investigated via the REST API. Findings:
+- The `Work Commenced → In Progress` transition (id 51) has **no required-field
+  validators** — assignee and points are **not** enforced by the workflow.
+- Therefore the check is a **Jira Automation rule** (Automation config is not
+  exposed via API, so it cannot be read here — the admin sees it under
+  **Project settings → Automation**).
+- It is **not hard-blocking sub-tasks today** (e.g. SP-10365 is a Sub-task, In
+  Progress, with no points).
+
+Proposed rule (keeps your ask):
+- **Assignee required on all types** entering In Progress.
+- **`Sum of Story Points` required on Story/Task only**; **Sub-task exempt**
+  (add condition *Issue type is not Sub-task* to the points branch).
+
+### 7.6 Open question / honest challenge — estimation field
+
+Today the estimate lives in a **custom field, `Sum of Story Points` (10599)**,
+fed by five discipline point fields (UI / API-HAL / QA / Integration / Data S&A).
+The built-in **`Story Points` (10022)** is unused (null everywhere, hidden on
+Task) and is dropped from the model.
+
+**Why does the custom field exist?** The usual justification is that Jira's
+built-in Story Points **cannot roll up** from sub-tasks/disciplines to the
+parent, and cannot hold a per-discipline split — so teams compute their own
+aggregate. **However**, in our instance the sum is **maintained manually** — no
+automation or app computes it. That removes the main reason to prefer a custom
+field.
+
+The honest challenge: if we are typing the number by hand anyway, we could use
+Jira's **built-in Story Points** and regain **native velocity / burndown / sprint
+reports**, which only understand the built-in estimation field. The custom field
+means those native reports are blank or wrong unless rebuilt in dashboards.
+
+Trade-off to decide with the PM team:
+- **Keep `Sum of Story Points`** — consistent with all historical data; keep the
+  discipline splits; accept that native agile reports don't read it.
+- **Move to built-in Story Points** — regain native reporting; lose the
+  per-discipline split unless kept as separate optional fields; requires a data
+  migration/backfill decision for historical tickets.
+
+For now the templates use `Sum of Story Points` to stay consistent with today.
+This is flagged as an open decision, not a settled one.
