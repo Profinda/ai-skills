@@ -8,29 +8,35 @@ below (your choice — see the skill/README). Dependencies are Jira issue links.
 Estimate (Sum of Story Points), Customer, Pod, Source, PM live in Jira fields.
 -->
 
-## User value
+## {green} B · WHAT & WHY
+
+### User value
 As a {persona}, I want {capability}, so that {benefit}.
 
-## Requirements (functional)
+## {teal} C · REQUIREMENTS
+
+### Requirements (functional)
 Numbered list of what the system must do for THIS story.
 
-## UX / UI requirements
+### UX / UI requirements
 User-facing design requirements. Link Figma. N/A-with-reason if none.
 
-## Acceptance criteria
+### Acceptance criteria
 - Given … When … Then … (specific, testable)
 
-## Detailed technical design
+## {navy} D · TECHNICAL DESIGN
+
+### Detailed technical design
 Story-level design. Inherits the Epic architecture — do not repeat it.
 - Approach:
 - Architecture / data / API changes specific to this story:
 - Feasibility notes:
 
-## Plan
+### Plan
 The plan/spec the dev or agent follows. May be drafted as a local PLAN.md in the
 loop, but must live here so it survives independent of any machine.
 
-## Steps
+### Steps
 Choose ONE:
 - **Sub-tasks** (recommended for multi-session/parallel work) — created and linked
   in Jira; progress = sub-task status. Delete this checklist if using sub-tasks.
@@ -38,13 +44,13 @@ Choose ONE:
   - [ ] Step 1
   - [ ] Step 2
 
-## Test approach
+### Test approach
 What proves this works. Link test plan if applicable.
 
-## Out of scope
+### Out of scope
 Explicitly NOT included in this story.
 
-## Definition of Ready to Build
+## {orange} E · APPROVAL — DEFINITION OF READY TO BUILD
 - [ ] Acceptance criteria clear and testable
 - [ ] UX linked or N/A
 - [ ] Technical design agreed

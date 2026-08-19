@@ -15,9 +15,52 @@
       ]
     },
     {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "colspan": 1,
+                "background": "#1d7a4e"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "B · WHAT & WHY",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        },
+                        {
+                          "type": "textColor",
+                          "attrs": {
+                            "color": "#ffffff"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -36,9 +79,52 @@
       ]
     },
     {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "colspan": 1,
+                "background": "#0f7b8c"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "C · REQUIREMENTS",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        },
+                        {
+                          "type": "textColor",
+                          "attrs": {
+                            "color": "#ffffff"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -57,9 +143,52 @@
       ]
     },
     {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "colspan": 1,
+                "background": "#1b2a4a"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "D · TECHNICAL DESIGN",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        },
+                        {
+                          "type": "textColor",
+                          "attrs": {
+                            "color": "#ffffff"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -127,7 +256,7 @@
     {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -157,7 +286,7 @@
     {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -253,7 +382,7 @@
     {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -274,7 +403,7 @@
     {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -293,14 +422,45 @@
       ]
     },
     {
-      "type": "heading",
+      "type": "table",
       "attrs": {
-        "level": 2
+        "isNumberColumnEnabled": false,
+        "layout": "default"
       },
       "content": [
         {
-          "type": "text",
-          "text": "⚠️ Customer impact check (Release Notes gate)"
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "colspan": 1,
+                "background": "#b91c1c"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "E · CUSTOMER IMPACT CHECK (Release Notes gate)",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        },
+                        {
+                          "type": "textColor",
+                          "attrs": {
+                            "color": "#ffffff"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -381,7 +541,7 @@
     {
       "type": "heading",
       "attrs": {
-        "level": 2
+        "level": 3
       },
       "content": [
         {
@@ -400,14 +560,45 @@
       ]
     },
     {
-      "type": "heading",
+      "type": "table",
       "attrs": {
-        "level": 2
+        "isNumberColumnEnabled": false,
+        "layout": "default"
       },
       "content": [
         {
-          "type": "text",
-          "text": "Definition of Ready to Build"
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "colspan": 1,
+                "background": "#c96a00"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "F · APPROVAL — DEFINITION OF READY TO BUILD",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        },
+                        {
+                          "type": "textColor",
+                          "attrs": {
+                            "color": "#ffffff"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },

@@ -26,6 +26,20 @@ python3 generate.py --check   # exits 1 if any .adf.json is out of date
   paragraphs, bullet/task lists, tables, blockquotes. HTML comments are dropped
   (guidance is not stored in Jira).
 
+## Coloured section banners
+
+A heading prefixed with a colour token becomes a full-width coloured header bar
+(white bold text), matching the original Jira template. Syntax in the Markdown:
+
+```md
+## {green} B · PROBLEM DEFINITION & FEASIBILITY
+```
+
+Named colours (original palette): `green` #1d7a4e · `teal` #0f7b8c ·
+`navy` #1b2a4a · `red` #b91c1c · `orange` #c96a00. Use `###` for the real
+sub-headings underneath a banner. These colours persist through the Jira REST API
+(verified round-trip).
+
 ## Using an ADF file
 
 Paste the JSON as the `description` when creating/updating an issue via the Jira
