@@ -41,10 +41,10 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | Skill | Description |
 |---|---|
 | `profinda-adr` | Create and maintain Architecture Decision Records |
-| `profinda-jira` | Jira workflow: PRD in Epic, Stories, sub-tasks as progress tracker, HANDOFF comments. Uses `mcp-atlassian` MCP. |
+| `profinda-jira` | Jira workflow: Epic = living PRD, Story/Task, optional sub-task steps, dependencies as links, dual sign-off. Includes description templates (MD + ADF). Uses `mcp-atlassian` MCP. |
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
-| `profinda-prd` | Write a Product Requirements Document from conversation context |
+| `profinda-prd` | **Deprecated** — the PRD now lives in the Epic. Use `profinda-jira`. |
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 
