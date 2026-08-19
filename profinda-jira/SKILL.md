@@ -56,6 +56,26 @@ Per level, the fields most often missing and worth asking about:
 - **Story:** acceptance criteria, UX/Figma, scope boundaries.
 - **Task:** definition of done, rollback, customer-impact (release-notes gate).
 
+## Risk assessment (Epic only)
+
+The Epic template's risk table lists **every risk type** to evaluate: Data,
+Customisation, UX, InfoSec, Performance, Business, Political, Resource,
+Commercial, Cost, AI. Treat it as a checklist, not free text:
+
+1. Go type by type. For each, either **score it** (Critical 8 / High 5 / Medium 3
+   / Low 1) with a one-line description + mitigation, or mark **N/A (0)** with a
+   brief reason. Never leave a row blank — blank means "not yet assessed".
+2. **Flag what the conversation hasn't covered.** If a risk type has no signal
+   from the discussion or codebase, say so and ask — don't guess a score.
+3. For the **AI** row, also assess bias, privacy, misinformation and societal
+   harm at individual / group / societal level.
+4. Compute the **total**; if it's ≥ 17 or any single risk is Critical, mark it
+   **escalated**. Set **InfoSec reviewed** if any InfoSec risk is Medium+.
+5. Risk is assessed **once, on the Epic**. If a Story/Task later surfaces a new
+   risk, add the row to the Epic and note the change in its change log.
+
+Full definitions live in Notion: *Risk Management / Risk Assessment Framework*.
+
 ## When the developer provides a Jira ID
 
 1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`. Check for a

@@ -39,16 +39,37 @@ System-level approach. Services, data flows, contracts affected.
 No implementation detail, no file paths. (Detailed design lives on Stories/Tasks.)
 
 ## {red} E · RISK ASSESSMENT (done ONCE, here)
-Use the Risk Assessment Framework. Score each: Critical=8 High=5 Medium=3 Low=1.
-Escalate before build if total ≥ 17.
+Full framework in Notion: **Risk Management / Risk Assessment Framework**. This
+table lists **every risk type to evaluate** so nothing is skipped. For each type:
+score it, or mark **N/A** with a one-line reason. Do not delete rows — an empty
+row means "not yet assessed".
 
-| # | Type | Level (score) | Description | Mitigation |
-|---|------|---------------|-------------|------------|
-| 1 | Data / UX / InfoSec / Performance / Business / AI / … | | | |
+Scoring: **Critical = 8 · High = 5 · Medium = 3 · Low = 1 · N/A = 0**.
+Escalate before build if the total is **≥ 17**, or if any single risk is Critical.
 
-- AI-specific risks: bias, privacy, misinformation, societal harm.
-- Total risk score:
-- InfoSec (SOG) reviewed? Yes / No / N/A
+| Risk type | Level (score) | Description (or N/A + reason) | Mitigation |
+|---|---|---|---|
+| Data | | | |
+| Customisation | | | |
+| UX | | | |
+| InfoSec | | | |
+| Performance | | | |
+| Business | | | |
+| Political | | | |
+| Resource | | | |
+| Commercial | | | |
+| Cost | | | |
+| AI | | | |
+
+**AI risk — extra detail (fill if the AI row is scored):** evaluate ethical,
+social and legal impact — algorithmic bias, privacy, misinformation, societal
+harm — at individual, group and societal level.
+
+- **Total risk score:** {sum of all rows}
+- **Highest single risk:** {type + level}
+- **InfoSec (SOG) reviewed?** Yes / No / N/A — required if any InfoSec risk is
+  Medium or above.
+- **Escalated?** Yes / No — required if total ≥ 17 or any risk is Critical.
 
 ## {orange} F · PRD APPROVAL (gate to development)
 Sign-off is recorded here AND via the Jira status transition. Auditors (SOC-2 /
