@@ -3,18 +3,6 @@
   "version": 1,
   "content": [
     {
-      "type": "heading",
-      "attrs": {
-        "level": 1
-      },
-      "content": [
-        {
-          "type": "text",
-          "text": "{Task title}"
-        }
-      ]
-    },
-    {
       "type": "table",
       "attrs": {
         "isNumberColumnEnabled": false,

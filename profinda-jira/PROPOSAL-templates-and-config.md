@@ -137,8 +137,6 @@ spec. This is the Definition of Ready to Build at the Epic level.
 ### 4.1 EPIC (living PRD)
 
 ```md
-# {Epic title}
-
 ## Change log
 - PRD version: 1.0
 - Last substantive change: {date} — {what changed and why}
@@ -191,8 +189,6 @@ Escalate before build if total ≥ 17.
 ### 4.2 STORY (user-facing feature — UI, public APIs, MCPs)
 
 ```md
-# {Story title}
-
 ## User value
 As a {persona}, I want {capability}, so that {benefit}.
 
@@ -234,8 +230,6 @@ Explicitly NOT included in this story.
 ### 4.3 TASK (internal technical — devops, non-breaking refactors)
 
 ```md
-# {Task title}
-
 ## What & why (technical end-state)
 What is being changed and the technical end state. Why it matters.
 
@@ -284,8 +278,6 @@ the Story/Task instead, you don't need this. The template is intentionally
 minimal so it can be used differently per team/agent.
 
 ```md
-# {Sub-task title — one concrete step}
-
 ## Objective
 The single step this delivers. What "done" means for this step.
 

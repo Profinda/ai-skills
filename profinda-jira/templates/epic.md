@@ -1,5 +1,3 @@
-# {Epic title}
-
 <!--
 EPIC = the living PRD. Starts light, enriched through 3-amigos, sizing and risk,
 then gates into development. Risk and high-level architecture are done ONCE here —

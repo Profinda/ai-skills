@@ -1,5 +1,3 @@
-# {Sub-task title — one concrete step}
-
 <!--
 SUB-TASK = optional. Use when breaking a Story/Task into steps (recommended for
 multi-session/parallel work). If you use a checklist in the parent instead, you

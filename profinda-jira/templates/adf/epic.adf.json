@@ -5,18 +5,6 @@
     {
       "type": "heading",
       "attrs": {
-        "level": 1
-      },
-      "content": [
-        {
-          "type": "text",
-          "text": "{Epic title}"
-        }
-      ]
-    },
-    {
-      "type": "heading",
-      "attrs": {
         "level": 2
       },
       "content": [

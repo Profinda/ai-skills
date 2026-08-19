@@ -1,5 +1,3 @@
-# {Task title}
-
 <!--
 TASK = internal technical work (devops, non-breaking refactors). Owned by
 Engineering. Inherits the Epic's architecture and risk — do NOT repeat them.

@@ -1,5 +1,3 @@
-# {Story title}
-
 <!--
 STORY = user-facing feature (UI, public APIs, MCPs). Owned by Product.
 Inherits the Epic's architecture and risk — do NOT repeat them here.
