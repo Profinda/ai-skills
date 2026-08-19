@@ -28,25 +28,28 @@ that genuinely gate work, and reporting fields appear later in the workflow.
 
 Legend: **R** required · O optional · — not on create screen (still editable later)
 
-| # | Field (ID) | Epic | Story | Task | Sub-task | Change vs today |
-|---|---|---|---|---|---|---|
-| 1.1 | Summary | R | R | R | R | none |
-| 1.2 | Description (template) | R | R | R | R | none |
-| 1.3 | Priority | R | R | R | O | Sub-task → optional |
-| 1.4 | Parent | — | R | R | R | Story/Task parent = Epic (make required) |
-| 1.5 | Product Manager (10602) | R | R | O | — | **Expose + require on Story** |
-| 1.6 | Pod (10988) | R | R | R | O | **Require on Epic** (was optional) |
-| 1.7 | Source/category (11021) | R | R | R | O | Require consistently; sub-task optional |
-| 1.8 | Requires Documentation (10694) | O | R | R | O | **Epic → optional** (set during refinement) |
-| 1.9 | AI Service (11668) | R | O | O | — | **Expose optional on Story/Task** |
-| 1.10 | Fix versions | O | R | R | O | none |
-| 1.11 | Environment (10598) | — | R | R | O | none |
-| 1.12 | Tshirt size (10711) | R | O | O | — | Epic sizing field |
-| 1.13 | Sum of Story Points (10599) | — | **R** | **R** | — | **Estimate field. Require on Story & Task; not on Sub-task.** See Change 6 + open question on custom vs built-in |
-| 1.13b | Story Points (10022) — legacy | — | — | — | — | **Drop.** Null everywhere, hidden on Task |
-| 1.14 | Release notes (10578) | — | O | **R if customer-facing** | — | **Conditional-required on Task** (Change 3) |
-| 1.15 | Customer (10548) | O | O | O | — | none |
-| 1.16 | Team (10300) | O | O | O | O | none |
+Columns: Epic · Story · Task · Bug · Sub-task.
+
+| # | Field (ID) | Epic | Story | Task | Bug | Sub-task | Change vs today |
+|---|---|---|---|---|---|---|---|
+| 1.1 | Summary | R | R | R | R | R | none |
+| 1.2 | Description (template) | R | R | R | R | R | none |
+| 1.3 | Priority | R | R | R | R | O | Sub-task → optional |
+| 1.4 | Parent | — | R | R | — | R | Story/Task parent = Epic (required); Sub-task parent required |
+| 1.5 | Product Manager (10602) | R | R | **R** | O | — | **Require on Task too** — auto-copy from Epic (Change 8) |
+| 1.6 | Pod (10988) | R | R | R | R | **—** | **Remove from Sub-task** (item 6). Pod = the team field (item 11) |
+| 1.7 | Source/category (11021) | R | R | R | O | **—** | **Remove from Sub-task** (item 5) |
+| 1.8 | Requires Documentation (10694) | O | R | R | O | **—** | **Remove from Sub-task** (item 7) |
+| 1.9 | AI Service (11668) | R | **—** | **—** | — | — | **Remove from Story & Task** (item 8) — Epic-level decision only |
+| 1.10 | Fix versions | O | R | R | O | **—** | **Remove from Sub-task** (item 9) |
+| 1.11 | Environment (10598) | — | **—** | **—** | **R** | **—** | **Bug only** — where the bug was found (items 3, 10). Hidden elsewhere |
+| 1.12 | Target Environment (11602) | O | R | R | O | — | Release destination incl. hotfix (item 2). Distinct from Environment |
+| 1.13 | Tshirt size (10711) | R | O | O | — | — | Epic sizing field |
+| 1.14 | Sum of Story Points (10599) | — | **R** | **R** | O | **—** | Estimate field. Story/Task only. See Change 6 + open question |
+| 1.14b | Story Points (10022) — legacy | — | — | — | — | — | **Drop.** Null everywhere, hidden on Task |
+| 1.15 | Release notes (10578) | — | O | **R if customer-facing** | O | — | Conditional-required on Task (Change 3) |
+| 1.16 | Customer (10548) | **R** | **R** | **R** | **R** | **—** | **Required on all except Sub-task** (item 12) — auto-copy from Epic (Change 8) |
+| 1.17 | Team (10300) — native | **—** | **—** | **—** | **—** | **—** | **Hidden everywhere** (item 11) — polluted with OpsGenie/departments; Pod replaces it |
 
 ---
 
@@ -66,16 +69,18 @@ fully functional in the workflow — they just stop cluttering creation.
 | 2.8 | Blocked Cause | Set when blocked |
 | 2.9 | Product Review | Set during review |
 | 2.10 | Escalate to | Set on escalation |
-| 2.11 | Department | Reporting |
+| 2.11 | **Department — DELETE the field entirely** | Redundant with Pod; polluted (item 1) |
 | 2.12 | Delivery Project | Reporting |
-| 2.13 | Target Environment | Set at release planning |
-| 2.14 | Product Involvement | Reporting |
-| 2.15 | Test Plan Status | Set by QA workflow |
-| 2.16 | File Expected Date | Niche, set when relevant |
-| 2.17 | Current behaviour | Belongs in description if needed |
-| 2.18 | Notion Documentation Link | Use issue links / description |
-| 2.19 | Start date | Set at planning |
-| 2.20 | Due date | Set at planning |
+| 2.13 | Product Involvement | Reporting |
+| 2.14 | Test Plan Status | Set by QA workflow |
+| 2.15 | File Expected Date | Niche, set when relevant |
+| 2.16 | Current behaviour | Belongs in description if needed |
+| 2.17 | Notion Documentation Link | Use issue links / description |
+| 2.18 | Start date | Set at planning |
+| 2.19 | Due date | Set at planning |
+
+Note: **Target Environment is NOT removed** — it is a proper field (see 1.12).
+**Environment is not removed** either — it is scoped to **Bug only** (see 1.11).
 
 ### 2b. Sub-task create screen — keep it minimal
 
@@ -85,14 +90,18 @@ needs; remove all estimation and reporting fields from it.
 
 | # | Field | Action on Sub-task |
 |---|---|---|
-| 2b.1 | Sum of Story Points (10599) | **Remove** — estimate lives on the parent Task/Story |
-| 2b.2 | UI Points / API/HAL Points / QA Points / Integration Points / Data S&A Points | Remove |
-| 2b.3 | Story Points (10022) — legacy | Remove — field is being dropped anyway |
-| 2b.4 | Tshirt size | Remove |
-| 2b.5 | AI Service, Environment, Fix versions, Customer | Remove — inherited from parent |
+| 2b.1 | Sum of Story Points (10599) + all discipline point fields | **Remove** — estimate lives on the parent |
+| 2b.2 | Pod (10988) | **Remove** (item 6) |
+| 2b.3 | Source/category (11021) | **Remove** (item 5) |
+| 2b.4 | Requires Documentation (10694) | **Remove** (item 7) |
+| 2b.5 | Fix versions | **Remove** (item 9) |
+| 2b.6 | Environment (10598) | **Remove** (item 10) |
+| 2b.7 | Customer (10548) | **Remove** (item 12) |
+| 2b.8 | AI Service, Tshirt size, Story Points (10022) | Remove |
 
 Sub-task create screen keeps only: **Summary, Description (template), Parent
-(required), Priority (optional), Team (optional)**, plus assignee.
+(required), Priority (optional)**, plus assignee. Everything else is inherited
+from the parent Task/Story (and copied down by automation where needed).
 
 ---
 
@@ -188,6 +197,68 @@ Action (keeps the check on Task/Story, removes it from Sub-task):
 
 ---
 
+## Change 8 — Attribution auto-copy from parent (kill the real duplication)
+
+The honest challenge on duplication: **is it wasteful to repeat Customer / Pod /
+Source / PM on Story/Task when they already exist on the Epic?**
+
+Answer, precisely:
+- **On Sub-tasks: yes, wasteful — removed.** Sub-tasks carry no effort estimate
+  (points live on the parent), so attribution on a sub-task adds nothing to
+  effort reporting. Removed (items 5, 6, 12).
+- **On Story/Task: NOT wasteful — required.** The Story/Task is where the effort
+  estimate (`Sum of Story Points`) lives. **JQL cannot filter an issue by its
+  parent Epic's Customer/Pod.** So "effort per customer" and "effort per pod"
+  reports **require the field physically on the estimate-bearing issue**. This is
+  exactly the reporting reason suspected — confirmed.
+
+The fix that removes the *manual* duplication without breaking reporting:
+> **Automation rule:** on create of a Story/Task, if Customer / Pod / Source /
+> Product Manager are empty, copy them from the parent Epic. Humans never
+> re-type; the value is still physically on the issue for JQL/reporting.
+
+Action:
+- Keep Customer/Pod/Source required on Story/Task and PM required on Task.
+- Add the copy-from-parent Automation rule so they default from the Epic.
+
+---
+
+## Change 9 — Team field cleanup (Pod becomes the team field)
+
+Problem: the native **Team (10300)** field is **polluted** — it mixes OpsGenie
+on-call teams and departments with delivery teams, so it is unreliable for
+delivery attribution.
+
+Decision: **Pod (10988) is the single controlled team field.** Native Team is
+**hidden from all create screens** (not deleted — deleting is destructive and
+would break history / any Plans usage). Pod is a controlled single-select and
+already populated on real tickets.
+
+Action:
+- Hide native Team (10300) from Epic/Story/Task/Bug/Sub-task create screens.
+- Treat Pod as the team of record for reporting.
+- (Optional future) if native Team is wanted for Plans later, curate its option
+  list to mirror Pod and de-pollute the OpsGenie/department entries first.
+
+---
+
+## Change 10 — Environment vs Target Environment (distinct, scoped)
+
+The two fields have near-identical option lists (Environment has an "Integration"
+vs "Integrations" typo) but different meanings. Keep both, scope them:
+
+- **Environment (10598)** = *where a bug was found*. **Bug only** — required on
+  Bug, hidden on Epic/Story/Task/Sub-task (items 3, 10).
+- **Target Environment (11602)** = *release destination* (incl. hotfixes).
+  Available on all delivery types; required on Story/Task (item 2).
+
+Action:
+- Make Environment required on Bug, remove it from non-Bug create screens.
+- Keep Target Environment on Story/Task; fix the "Integration/Integrations" typo
+  so both lists match.
+
+---
+
 ## Change 5 — Dependencies as issue links, not text fields
 
 Rationale: dependencies are currently free-typed in template tables and scattered
@@ -212,6 +283,9 @@ redesign) and train teams/agents to use links.
 | 6 — Estimate required on Task/Story, removed from Sub-task | PM lead | ☐ | | |
 | 6 (open q) — Custom `Sum of Story Points` vs built-in Story Points | PM lead + Eng lead | ☐ | | |
 | 7 — "In Progress" automation exempts Sub-tasks | PM lead + Jira admin | ☐ | | |
+| 8 — Attribution auto-copy from parent Epic | PM lead + Jira admin | ☐ | | |
+| 9 — Team hidden; Pod is the team field | PM lead + Jira admin | ☐ | | |
+| 10 — Environment (Bug only) vs Target Environment | PM lead + Jira admin | ☐ | | |
 
 Once approved, the Jira admin implements Changes 1–4 in the SP project screen
 schemes and workflow; Change 7 is an Automation-rule edit; Change 5 is enforced

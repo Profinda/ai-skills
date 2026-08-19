@@ -279,7 +279,7 @@ No separate progress doc.
 A Sub-task carries **no estimation of its own** — no points, no t-shirt. The
 estimate is entered directly on the parent Task/Story (`Sum of Story Points`,
 10599). The Sub-task create screen is stripped to the minimum (Summary,
-Description, Parent, Priority, Team). See Jira config Change 2b / Change 6.
+Description, Parent, Priority). See Jira config Change 2b / Change 6.
 
 ---
 
@@ -303,42 +303,23 @@ that the description already covers (and vice versa).
 | Priority | required | required | required | optional | |
 | Parent | — | optional | optional | required | Correct |
 
-### 5.2 Proposed create-screen fields (required / optional / remove)
+### 5.2 Create-screen field configuration
 
-Legend: **R** required · O optional · — hide from create screen (still usable later)
+The full required/optional/remove matrix per issue type is maintained as the
+single source of truth in **`JIRA-CONFIG-CHANGES.md`** (Change 1 & 2). It is not
+duplicated here to avoid the two docs drifting.
 
-| Field | Epic | Story | Task | Sub-task | Notes |
-|---|---|---|---|---|---|
-| Summary | R | R | R | R | |
-| Description (template) | R | R | R | R | |
-| Priority | R | R | R | O | |
-| Parent | — | R | R | R | Story/Task link to Epic; Sub-task to Story/Task |
-| Product Manager (10602) | R | R | O | — | PM owns Story per Jira role split |
-| Pod (10988) | R | R | R | O | Align: required everywhere except sub-task |
-| Source/category (11021) | R | R | R | O | Align |
-| Requires Documentation (10694) | O | R | R | O | Decided during refinement on Epic |
-| AI Service (11668) | R | O | O | — | Keep on Epic; expose optional on Story/Task |
-| Fix versions | O | R | R | O | Release train |
-| Environment (10598) | — | R | R | O | |
-| Tshirt size (10711) | R | O | O | — | Epic sizing; Story/Task carry the estimate |
-| Sum of Story Points (10599) | — | R | R | — | **Required estimate on Story/Task; not on Sub-task** — see open question 7.6 (why a custom field vs built-in) |
-| Story Points (10022) — legacy | — | — | — | — | **Dropped from the model** — null everywhere, hidden on Task |
-| Release notes (10578) | — | O | R-if-customer-facing | — | Task gate (see 4.3) |
-| Customer (10548) | O | O | O | — | |
-| Team (10300) | O | O | O | O | |
-
-### 5.3 Remove from the CREATE screen (move to a later transition screen)
-
-These are workflow/reporting fields that pollute creation and should appear only
-when relevant in the workflow, not at create time:
-
-- UI Points, API/HAL Points, QA Points, Integration Points, Data S&A Points
-  (discipline splits — used during refinement/planning, not at create time)
-- QA Failure Reasons, Blocked Cause, Product Review, Escalate to
-- Department, Delivery Project, Target Environment, Product Involvement
-- Test Plan Status, File Expected Date, Current behaviour
-- Notion Documentation Link (superseded by proper links / the description)
-- Start date, Due date (set during planning, not creation)
+Key principles reflected there:
+- **Attribution (Customer, Pod, Source, PM)** lives on estimate-bearing issues
+  (Epic + Story/Task) and is **removed from Sub-tasks**; it is auto-copied from
+  the parent Epic so nobody re-types it (Change 8).
+- **Pod is the team field**; the polluted native Team is hidden (Change 9).
+- **Environment = Bug only** (where found); **Target Environment = release
+  destination** for delivery types (Change 10).
+- **AI Service = Epic only.**
+- **Estimate = `Sum of Story Points`** on Story/Task only (open question 7.6).
+- **Sub-task create screen** is stripped to Summary, Description, Parent,
+  Priority.
 
 ### 5.4 Fields that duplicate the description — pick ONE home
 
@@ -373,7 +354,8 @@ tables even though a status transition also exists.
 1. Confirm the Epic gate: block **In refinement → In Progress** until the spec is
    complete (validator or manual DoR checklist?).
 2. Confirm required-field table (5.2) with the Jira admin.
-3. Confirm removing reporting fields from the create screen (5.3).
+3. Confirm removing reporting fields from the create screen (see
+   `JIRA-CONFIG-CHANGES.md` Change 2).
 4. Confirm Release Notes becomes conditionally-required on Task (5.2).
 5. Confirm dual sign-off (status transition + template row) — section 6.
 6. Confirm the "In Progress" automation scope (section 7.5).
