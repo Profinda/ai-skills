@@ -139,10 +139,12 @@ spec. This is the Definition of Ready to Build at the Epic level.
 ```md
 # {Epic title}
 
-## Lifecycle
-- Stage: Draft | In refinement | Ready to build | In progress | Done
+## Change log
 - PRD version: 1.0
 - Last substantive change: {date} — {what changed and why}
+
+<!-- Stage = Jira status. Child Stories/Tasks = Jira child-issues panel. Open
+questions = Jira comments. None are duplicated in the description. -->
 
 ## 1. Problem & why now
 What problem are we solving? Why does it matter now? Evidence if available.
@@ -172,18 +174,16 @@ Escalate before build if total ≥ 17.
 - Total risk score:
 - InfoSec (SOG) reviewed? Yes / No / N/A
 
-## 7. Stories & Tasks
-Linked automatically via parent. List here only if extra context is useful.
-
-## 8. Open questions
-Outstanding decisions affecting scope or design.
-
-## 9. PRD approval (gate to development)
+## 7. PRD approval (gate to development)
 | Role | Name & date | Approved / Rejected (notes) |
 |------|-------------|-----------------------------|
 | Product | | |
 | Lead Engineer | | |
 ```
+
+> No "Stories & Tasks" section (Jira child-issues/links panel shows this live) and
+> no "Open questions" section (those are Jira comments — a moving conversation
+> doesn't belong frozen in the spec). No "Stage" line (that's the Jira status).
 
 > No sizing section in the Epic body: **t-shirt size is the Jira field**
 > (`customfield_10711`), not prose — don't duplicate it in the description.
@@ -211,9 +211,6 @@ Story-level design. Inherits the Epic architecture — do not repeat it.
 - Architecture/data/API changes specific to this story:
 - Feasibility notes:
 
-## Test approach
-What proves this works. Link test plan if applicable.
-
 ## Out of scope
 Explicitly NOT included in this story.
 
@@ -226,6 +223,9 @@ Explicitly NOT included in this story.
 | Lead Engineer | | |
 | Product (or delegate) | | |
 ```
+
+> No Test approach section: the test plan lives in **SmartRuns** (linked), not
+> duplicated in the ticket.
 
 > No Risk section: risk lives on the Epic (done once). If a story surfaces a new
 > risk, update the Epic. No Dependencies section: use Jira issue links

@@ -44,9 +44,6 @@ Choose ONE:
   - [ ] Step 1
   - [ ] Step 2
 
-### Test approach
-What proves this works. Link test plan if applicable.
-
 ### Out of scope
 Explicitly NOT included in this story.
 
@@ -63,5 +60,6 @@ Explicitly NOT included in this story.
 <!--
 No Risk section: risk lives on the Epic (done once). New risk → update the Epic.
 No Dependencies section: use Jira issue links (blocks / is blocked by).
+No Test approach section: the test plan lives in SmartRuns (linked), not here.
 Sign-off above is required in addition to the status transition (SOC-2/ISO 27001).
 -->

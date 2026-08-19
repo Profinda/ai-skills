@@ -22,27 +22,13 @@
       "content": [
         {
           "type": "text",
-          "text": "Lifecycle"
+          "text": "Change log"
         }
       ]
     },
     {
       "type": "bulletList",
       "content": [
-        {
-          "type": "listItem",
-          "content": [
-            {
-              "type": "paragraph",
-              "content": [
-                {
-                  "type": "text",
-                  "text": "Stage: Draft | In refinement | Ready to build | In progress | Done"
-                }
-              ]
-            }
-          ]
-        },
         {
           "type": "listItem",
           "content": [
@@ -620,48 +606,6 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "heading",
-      "attrs": {
-        "level": 2
-      },
-      "content": [
-        {
-          "type": "text",
-          "text": "7. Stories & Tasks"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "Linked automatically via parent. List here only if extra context is useful."
-        }
-      ]
-    },
-    {
-      "type": "heading",
-      "attrs": {
-        "level": 2
-      },
-      "content": [
-        {
-          "type": "text",
-          "text": "8. Open questions"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "Outstanding decisions affecting scope or design."
         }
       ]
     },

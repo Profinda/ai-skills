@@ -1,15 +1,18 @@
 # {Epic title}
 
 <!--
-EPIC = the living PRD. Starts light (Draft), enriched through 3-amigos, sizing
-and risk, then gates into development. Risk and high-level architecture are done
-ONCE here — Stories/Tasks do not repeat them.
-Fields (t-shirt size, Product Manager, Pod, Customer, Source, AI Service,
-Product Involvement, Notion link) live in Jira fields, not in this description.
+EPIC = the living PRD. Starts light, enriched through 3-amigos, sizing and risk,
+then gates into development. Risk and high-level architecture are done ONCE here —
+Stories/Tasks do not repeat them.
+Uses Jira native features, no duplication:
+- Stage = the Jira STATUS field (not written here)
+- Child Stories/Tasks = the Jira child-issues / links panel (not listed here)
+- Open questions & discussion = Jira COMMENTS (not frozen here)
+- t-shirt size, Product Manager, Pod, Customer, Source, AI Service, Product
+  Involvement, Notion link = Jira FIELDS (not written here)
 -->
 
-## Lifecycle
-- Stage: Draft | In refinement | Ready to build | In progress | Done
+## Change log
 - PRD version: 1.0
 - Last substantive change: {date} — {what changed and why}
 
@@ -48,12 +51,6 @@ Escalate before build if total ≥ 17.
 - AI-specific risks: bias, privacy, misinformation, societal harm.
 - Total risk score:
 - InfoSec (SOG) reviewed? Yes / No / N/A
-
-## 7. Stories & Tasks
-Linked automatically via parent. List here only if extra context is useful.
-
-## 8. Open questions
-Outstanding decisions affecting scope or design.
 
 ## {orange} F · PRD APPROVAL (gate to development)
 Sign-off is recorded here AND via the Jira status transition. Auditors (SOC-2 /
