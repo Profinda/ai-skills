@@ -3,14 +3,45 @@
   "version": 1,
   "content": [
     {
-      "type": "heading",
+      "type": "table",
       "attrs": {
-        "level": 2
+        "isNumberColumnEnabled": false,
+        "layout": "default"
       },
       "content": [
         {
-          "type": "text",
-          "text": "Change log"
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "colspan": 1,
+                "background": "#dcfff1"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A · CHANGE LOG",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        },
+                        {
+                          "type": "textColor",
+                          "attrs": {
+                            "color": "#1b2a4a"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },

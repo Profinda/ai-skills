@@ -10,7 +10,7 @@ Uses Jira native features, no duplication:
   Involvement, Notion link = Jira FIELDS (not written here)
 -->
 
-## Change log
+## {light-green} A · CHANGE LOG
 - PRD version: 1.0
 - Last substantive change: {date} — {what changed and why}
 

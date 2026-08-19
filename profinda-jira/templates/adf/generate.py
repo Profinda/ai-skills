@@ -7,9 +7,11 @@ Markdown is the source of truth (../*.md). This script regenerates the matching
 Supports the subset of Markdown used by the templates:
 - Headings (#..######)
 - Coloured section banners: a heading prefixed with a colour token becomes a
-  full-width coloured header bar (white bold text), matching the original Jira
+  full-width coloured header bar (bold text), matching the original Jira
   template. Syntax:  ## {green} 6. Risk assessment
-  Named colours: green, teal, navy, red, orange (see PALETTE).
+  Dark colours (white text): green, teal, navy, red, orange.
+  Light colours (dark text): light-green, light-orange, light-grey.
+  See PALETTE.
 - Paragraphs
 - Bullet lists (- ) and task lists (- [ ] / - [x])
 - Tables (| ... |) with a header separator row
@@ -29,13 +31,18 @@ HERE = Path(__file__).resolve().parent
 SRC_DIR = HERE.parent
 TEMPLATES = ["epic", "story", "task", "subtask"]
 
-# Named section-banner colours, matching the original SP-10376 template palette.
+# Named section-banner colours. Each maps to a (background, text) pair.
+# Dark shades (white text) match the original SP-10376 template palette; light
+# shades (dark text) are for softer intro/meta banners like the change log.
 PALETTE = {
-    "green": "#1d7a4e",
-    "teal": "#0f7b8c",
-    "navy": "#1b2a4a",
-    "red": "#b91c1c",
-    "orange": "#c96a00",
+    "green": ("#1d7a4e", "#ffffff"),
+    "teal": ("#0f7b8c", "#ffffff"),
+    "navy": ("#1b2a4a", "#ffffff"),
+    "red": ("#b91c1c", "#ffffff"),
+    "orange": ("#c96a00", "#ffffff"),
+    "light-green": ("#dcfff1", "#1b2a4a"),
+    "light-orange": ("#fff0db", "#1b2a4a"),
+    "light-grey": ("#f4f6f8", "#1b2a4a"),
 }
 
 BANNER_RE = re.compile(r"^\{(" + "|".join(PALETTE) + r")\}\s*(.*)")
@@ -65,9 +72,9 @@ def heading(level, s):
 
 
 def banner(color_name, s):
-    """A full-width coloured header bar: single-cell table row, white bold text."""
-    bg = PALETTE[color_name]
-    marks = [{"type": "strong"}, {"type": "textColor", "attrs": {"color": "#ffffff"}}]
+    """A full-width coloured header bar: single-cell table row, bold text."""
+    bg, fg = PALETTE[color_name]
+    marks = [{"type": "strong"}, {"type": "textColor", "attrs": {"color": fg}}]
     cell = {
         "type": "tableCell",
         "attrs": {"colspan": 1, "background": bg},
