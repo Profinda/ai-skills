@@ -19,8 +19,8 @@ differentiation between user-facing work and internal technical work.
 ### 1.2 The same spec is repeated at every level
 Sections **C Requirements**, **D Technical Design**, **E Risk Assessment** and
 **F Approval** appear on the Epic *and* the Story *and* the Task, near-verbatim.
-Maintaining the same content in three places guarantees drift — the exact
-failure mode we are trying to avoid by moving away from `PLAN.md`.
+Maintaining the same content in three places guarantees drift — the same failure
+mode as a plan that lives only on someone's disk (see section 2b).
 
 ### 1.3 Duplication inside a single Story/Task template
 Part 1 (DoR-to-Spec) and Part 2 (DoR-to-Build) restate the same concept:
@@ -63,8 +63,9 @@ STORY  → user-facing feature spec: user value, requirements, UX, acceptance
          criteria, detailed technical design, test approach, build sign-off
 TASK   → internal technical spec: technical end-state, requirements, detailed
          design, rollout/rollback, monitoring, RELEASE-NOTES gate, build sign-off
-SUB-TASK → the executable step: objective, dependencies, agent spec/thinking,
-           files touched, verification. Status = progress signal.
+SUB-TASK → (optional) one executable step: objective, spec/thinking, files
+           touched, verification. Status = progress. Alternative: a checklist in
+           the Story/Task (see 2b).
 ```
 
 Rules:
@@ -74,9 +75,41 @@ Rules:
 - **Dependencies are Jira issue links**, not free text.
 - **The description holds only narrative Jira cannot structure.** Points,
   t-shirt, PM, release notes, fix version, dependencies live in fields/links.
-- **Sub-tasks replace `PLAN.md`.** An independent agent reading a Sub-task plus
-  its parent Story/Task plus the Epic knows exactly where things are and what to
-  do next.
+- **The plan lives in the Story/Task; the steps live in sub-tasks OR a
+  checklist.** See section 2b — this is a choice, not a mandate.
+
+## 2b. Plan vs steps — where progress and thinking live
+
+This was debated. The decision separates two things that were being bundled:
+
+**The plan / spec — ALWAYS in the Story/Task description (non-negotiable).**
+The agent may draft it as a `PLAN.md` in the loop (zero friction, works in any
+harness), but it **must end up in the Story/Task** before/while building. It must
+never live *only* on a developer's disk — a laptop that dies, an un-pushed
+branch, or a developer on holiday must not take the plan with it. Jira is the
+durable, location-independent record.
+
+**The steps / progress — developer or agent chooses the artefact:**
+
+| Option | Use when | Progress signal |
+|---|---|---|
+| **Sub-tasks** (recommended) | Multi-session or parallel work; handoffs likely; you want the per-step thinking captured as a durable, queryable record (incl. future autonomous-agent training data) | Sub-task **status** |
+| **Checklist in the Story/Task** | Small/atomic work; single session; sub-tasks would be overhead | Ticked `- [ ]` boxes |
+
+Why sub-tasks are *recommended* but not *forced*:
+- **Pro:** each step's thinking/spec is visible, resumable by anyone, survives
+  people leaving, and builds a corpus of "how work was decomposed and reasoned" —
+  valuable as we move toward autonomous agents.
+- **Pro:** work can be picked up exactly where it was left, from Jira, regardless
+  of whose machine it was on.
+- **Con:** transcribing every breakdown into sub-tasks is friction, and mandating
+  it produces one-line compliance theatre — worse data than a good plan. Genuine
+  thinking comes from low friction, not mandate.
+
+So: **enforce "the plan is in Jira," not "the steps are authored as sub-tasks."**
+Teams and agents pick the step artefact that fits the work. The sub-task template
+is intentionally minimal (title + description) so it can be used differently per
+team/agent without forcing a single way of working.
 
 ---
 
@@ -244,7 +277,11 @@ Explicitly NOT included.
 > No Risk section: risk lives on the Epic (done once). If a task surfaces a new
 > risk, update the Epic. No Dependencies section: use Jira issue links.
 
-### 4.4 SUB-TASK (executable step — replaces PLAN.md)
+### 4.4 SUB-TASK (optional — one executable step)
+
+Use when you break the work into sub-tasks (see 2b). If you use a checklist in
+the Story/Task instead, you don't need this. The template is intentionally
+minimal so it can be used differently per team/agent.
 
 ```md
 # {Sub-task title — one concrete step}
@@ -268,8 +305,10 @@ How to prove this step works (tests, manual check, command).
 > AI skill instruct devs/agents to create the links; the template stays lean and
 > contains only what a step needs.
 
-Sub-task **status** is the progress signal: To Do → In Progress → In Review → Done.
-No separate progress doc.
+When sub-tasks are used, sub-task **status** is the progress signal:
+To Do → In Progress → In Review → Done. When a checklist is used instead, ticked
+boxes on the Story/Task are the signal. Either way the plan itself is in the
+Story/Task, so nothing depends on a local file.
 
 A Sub-task carries **no estimation of its own** — no points, no t-shirt. The
 estimate is entered directly on the parent Task/Story (`Sum of Story Points`,
