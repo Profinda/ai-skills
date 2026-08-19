@@ -276,6 +276,11 @@ How to prove this step works (tests, manual check, command).
 Sub-task **status** is the progress signal: To Do → In Progress → In Review → Done.
 No separate progress doc.
 
+A Sub-task carries **no estimation of its own** — no Story Points, no t-shirt, no
+point-breakdown fields. The parent Task/Story holds the estimate. Its create
+screen is stripped to the minimum (Summary, Description, Parent, Priority, Team).
+See Jira config Change 2b / Change 6.
+
 ---
 
 ## 5. Proposed Jira field configuration
@@ -316,7 +321,7 @@ Legend: **R** required · O optional · — hide from create screen (still usabl
 | Fix versions | O | R | R | O | Release train |
 | Environment (10598) | — | R | R | O | |
 | Tshirt size (10711) | R | O | O | — | Epic sizing; Story/Task use Story Points |
-| Story Points (10022/10529) | — | O | O | O | |
+| Story Points (10022/10529) | — | R | R | — | **Required on Story/Task; removed from Sub-task** — the parent carries the estimate |
 | Release notes (10578) | — | O | R-if-customer-facing | — | Task gate (see 4.3) |
 | Customer (10548) | O | O | O | — | |
 | Team (10300) | O | O | O | O | |

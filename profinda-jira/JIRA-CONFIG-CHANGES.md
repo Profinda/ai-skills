@@ -42,7 +42,7 @@ Legend: **R** required · O optional · — not on create screen (still editable
 | 1.10 | Fix versions | O | R | R | O | none |
 | 1.11 | Environment (10598) | — | R | R | O | none |
 | 1.12 | Tshirt size (10711) | R | O | O | — | Epic sizing field |
-| 1.13 | Story Points (10022 / 10529) | — | O | O | O | none |
+| 1.13 | Story Points (10022 / 10529) | — | **R** | **R** | — | **Require on Story & Task; remove from Sub-task** — estimate lives on the parent |
 | 1.14 | Release notes (10578) | — | O | **R if customer-facing** | — | **Conditional-required on Task** (Change 3) |
 | 1.15 | Customer (10548) | O | O | O | — | none |
 | 1.16 | Team (10300) | O | O | O | O | none |
@@ -76,6 +76,23 @@ fully functional in the workflow — they just stop cluttering creation.
 | 2.18 | Notion Documentation Link | Use issue links / description |
 | 2.19 | Start date | Set at planning |
 | 2.20 | Due date | Set at planning |
+
+### 2b. Sub-task create screen — keep it minimal
+
+A Sub-task is an executable step, not an estimation unit. Its parent Task/Story
+carries the estimate. Strip the Sub-task create screen down to only what a step
+needs; remove all estimation and reporting fields from it.
+
+| # | Field | Action on Sub-task |
+|---|---|---|
+| 2b.1 | Story Points (10022) | **Remove** — estimate lives on the parent Task/Story |
+| 2b.2 | UI Points / API/HAL Points / QA Points / Integration Points / Data S&A Points | Remove |
+| 2b.3 | Sum of Story Points | Remove (rollup) |
+| 2b.4 | Tshirt size | Remove |
+| 2b.5 | AI Service, Environment, Fix versions, Customer | Remove — inherited from parent |
+
+Sub-task create screen keeps only: **Summary, Description (template), Parent
+(required), Priority (optional), Team (optional)**, plus assignee.
 
 ---
 
@@ -115,6 +132,20 @@ by the Product + Lead Engineer, recorded in the Epic sign-off table.
 
 ---
 
+## Change 6 — Story Points: mandatory on Task/Story, absent on Sub-task
+
+Rationale: every deliverable unit (Story, Task) must be estimated before it enters
+a sprint — so Story Points becomes **required** on Story and Task. A Sub-task is
+just a step within an estimated parent, so it should **not** carry its own points
+(double-counting and noise). Story Points is therefore **removed from the Sub-task
+create screen** entirely (see Change 2b).
+
+Action:
+- Make **Story Points (10022)** required on Story and Task create/transition.
+- Remove **Story Points (10022)** from the Sub-task screen.
+
+---
+
 ## Change 5 — Dependencies as issue links, not text fields
 
 Rationale: dependencies are currently free-typed in template tables and scattered
@@ -136,6 +167,7 @@ redesign) and train teams/agents to use links.
 | 3 — Release Notes conditional-required | PM lead | ☐ | | |
 | 4 — Epic lifecycle gate | PM lead + Eng lead | ☐ | | |
 | 5 — Dependencies as links | Eng lead | ☐ | | |
+| 6 — Story Points required on Task/Story, removed from Sub-task | PM lead | ☐ | | |
 
 Once approved, the Jira admin implements Changes 1–4 in the SP project screen
 schemes and workflow; Change 5 is enforced via the templates and skills.
