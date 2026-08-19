@@ -50,6 +50,8 @@ Columns: Epic · Story · Task · Bug · Sub-task.
 | 1.15 | Release notes (10578) | — | O | **R if customer-facing** | O | — | Conditional-required on Task (Change 3) |
 | 1.16 | Customer (10548) | **R** | **R** | **R** | **R** | **—** | **Required on all except Sub-task** (item 12) — auto-copy from Epic (Change 8) |
 | 1.17 | Team (10300) — native | **—** | **—** | **—** | **—** | **—** | **Hidden everywhere** (item 11) — polluted with OpsGenie/departments; Pod replaces it |
+| 1.18 | Product Involvement (11800) | **R** | — | — | — | — | **Epic create** — Product↔work relationship (owns / guides / none) |
+| 1.19 | Notion Documentation Link (10635) | O | — | — | — | — | **Epic only, optional** — supplementary Notion material; PRD itself lives in the Epic |
 
 ---
 
@@ -71,16 +73,20 @@ fully functional in the workflow — they just stop cluttering creation.
 | 2.10 | Escalate to | Set on escalation |
 | 2.11 | **Department — DELETE the field entirely** | Redundant with Pod; polluted (item 1) |
 | 2.12 | Delivery Project | Reporting |
-| 2.13 | Product Involvement | Reporting |
-| 2.14 | Test Plan Status | Set by QA workflow |
-| 2.15 | File Expected Date | Niche, set when relevant |
-| 2.16 | Current behaviour | Belongs in description if needed |
-| 2.17 | Notion Documentation Link | Use issue links / description |
-| 2.18 | Start date | Set at planning |
-| 2.19 | Due date | Set at planning |
+| 2.13 | Test Plan Status | Set by QA workflow |
+| 2.14 | File Expected Date | Niche, set when relevant |
+| 2.15 | Current behaviour | Belongs in description if needed |
+| 2.16 | Start date | Set at planning |
+| 2.17 | Due date | Set at planning |
 
-Note: **Target Environment is NOT removed** — it is a proper field (see 1.12).
-**Environment is not removed** either — it is scoped to **Bug only** (see 1.11).
+Note:
+- **Target Environment is NOT removed** — a proper field (see 1.12).
+- **Environment is not removed** — scoped to **Bug only** (see 1.11).
+- **Product Involvement (11800) is NOT removed** — it stays on **Epic create**;
+  it defines the Product↔work relationship (Product owns / guides / none). See 1.18.
+- **Notion Documentation Link (10635) is NOT removed** — repurposed to **Epic
+  only, optional**, for supplementary Notion material (the PRD itself now lives
+  in the Epic description). See 1.19.
 
 ### 2b. Sub-task create screen — keep it minimal
 

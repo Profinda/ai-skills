@@ -139,21 +139,21 @@ Escalate before build if total ≥ 17.
 - Total risk score:
 - InfoSec (SOG) reviewed? Yes / No / N/A
 
-## 7. Sizing
-- Epic t-shirt size: S / M / L / XL — justification. (Also set the Jira field.)
-
-## 8. Stories & Tasks
+## 7. Stories & Tasks
 Linked automatically via parent. List here only if extra context is useful.
 
-## 9. Open questions
+## 8. Open questions
 Outstanding decisions affecting scope or design.
 
-## 10. PRD approval (gate to development)
+## 9. PRD approval (gate to development)
 | Role | Name & date | Approved / Rejected (notes) |
 |------|-------------|-----------------------------|
 | Product | | |
 | Lead Engineer | | |
 ```
+
+> No sizing section in the Epic body: **t-shirt size is the Jira field**
+> (`customfield_10711`), not prose — don't duplicate it in the description.
 
 ### 4.2 STORY (user-facing feature — UI, public APIs, MCPs)
 
@@ -184,13 +184,6 @@ What proves this works. Link test plan if applicable.
 ## Out of scope
 Explicitly NOT included in this story.
 
-## Risk
-Inherits the Epic risk assessment. If this story introduces a NEW risk,
-update the Epic risk table and note it here: "Added risk X to {Epic} on {date}."
-
-## Dependencies
-Use Jira issue links (blocks / is blocked by). Do not free-type here.
-
 ## Definition of Ready to Build
 - [ ] Acceptance criteria clear and testable
 - [ ] UX linked or N/A
@@ -200,6 +193,10 @@ Use Jira issue links (blocks / is blocked by). Do not free-type here.
 | Lead Engineer | | |
 | Product (or delegate) | | |
 ```
+
+> No Risk section: risk lives on the Epic (done once). If a story surfaces a new
+> risk, update the Epic. No Dependencies section: use Jira issue links
+> (`blocks` / `is blocked by`) — see the skill/README, not a template field.
 
 ### 4.3 TASK (internal technical — devops, non-breaking refactors)
 
@@ -235,12 +232,6 @@ If this is a large user-facing change, consider converting to a Story.
 ## Out of scope
 Explicitly NOT included.
 
-## Risk
-Inherits the Epic risk assessment. New risk → update the Epic and note it here.
-
-## Dependencies
-Jira issue links only.
-
 ## Definition of Ready to Build
 - [ ] Definition of done clear
 - [ ] Rollback plan defined
@@ -250,6 +241,9 @@ Jira issue links only.
 | Lead Engineer | | |
 ```
 
+> No Risk section: risk lives on the Epic (done once). If a task surfaces a new
+> risk, update the Epic. No Dependencies section: use Jira issue links.
+
 ### 4.4 SUB-TASK (executable step — replaces PLAN.md)
 
 ```md
@@ -257,10 +251,6 @@ Jira issue links only.
 
 ## Objective
 The single step this delivers. What "done" means for this step.
-
-## Depends on
-- Blocked by: SP-XXXX (use Jira links too)
-- Blocks: SP-XXXX
 
 ## Spec / thinking
 The agent (or dev) writes the plan and reasoning for HOW to make the change.
@@ -272,6 +262,11 @@ Modules, services, or areas affected.
 ## Verification
 How to prove this step works (tests, manual check, command).
 ```
+
+> Dependencies are **Jira issue links** (`blocks` / `is blocked by`), not a
+> template section — the link graph is the source of truth. The README and the
+> AI skill instruct devs/agents to create the links; the template stays lean and
+> contains only what a step needs.
 
 Sub-task **status** is the progress signal: To Do → In Progress → In Review → Done.
 No separate progress doc.
@@ -343,6 +338,13 @@ Approval is captured **twice, deliberately**, because each answers a different q
   survives export, and tells a reader/agent who approved what and when without
   digging through the Jira history log.
 
+**This is a compliance requirement, not a preference.** SOC-2 and ISO 27001
+auditors do **not** accept a Jira status transition on its own as a valid change
+approval — a status change is not an attributable, tamper-evident sign-off of
+*who* approved *what* and *when*. The explicit sign-off record in the artefact is
+required to satisfy change-management controls. So the template sign-off tables
+are mandatory and are **not** redundant with the status gate.
+
 Both must stay in sync. The template sign-off row is filled at the same moment the
 status transition is performed. This is why sections 4.1–4.3 keep the approval
 tables even though a status transition also exists.
@@ -353,10 +355,12 @@ tables even though a status transition also exists.
 
 1. Confirm the Epic gate: block **In refinement → In Progress** until the spec is
    complete (validator or manual DoR checklist?).
-2. Confirm required-field table (5.2) with the Jira admin.
+2. Confirm required-field table with the Jira admin (`JIRA-CONFIG-CHANGES.md`
+   Change 1).
 3. Confirm removing reporting fields from the create screen (see
    `JIRA-CONFIG-CHANGES.md` Change 2).
-4. Confirm Release Notes becomes conditionally-required on Task (5.2).
+4. Confirm Release Notes becomes conditionally-required on Task
+   (`JIRA-CONFIG-CHANGES.md` Change 3).
 5. Confirm dual sign-off (status transition + template row) — section 6.
 6. Confirm the "In Progress" automation scope (section 7.5).
 7. **Decide the estimation field** (section 7.6) — keep custom `Sum of Story
