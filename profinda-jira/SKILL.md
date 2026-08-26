@@ -46,18 +46,22 @@ Required fields differ from Task/Bug — check dynamically with `jira_get_create
 |---|---|
 | Audit | `13806` |
 | Booking 99 | `11000` |
+| Bulbasaur Squad | `14174` |
+| Charmander Squad | `14176` |
 | Design (Internal) | `11003` |
 | DevOps | `13598` |
 | Dynamic Insights | `13773` |
 | Firefighting | `13600` |
 | Integrations | `13599` |
+| Pikachu Squad | `14175` |
 | Placeholder Pod | `13740` |
 | Profile & Search | `11001` |
+| QA (not POD work) | `14379` |
 | Reporting & Insights | `11002` |
 | Skills | `13739` |
 | Squirtle Squad | `13938` |
 
-For Management-project issues, use `Firefighting` (`13600`) or `Placeholder Pod` (`13740`).
+For Management-project issues, use `Firefighting` (`13600`) or `Placeholder Pod` (`13740`). This list changes as squads are renamed/added — re-verify with `jira_get_field_options` if a name looks unfamiliar.
 
 ### Environment (`customfield_10598`)
 | Name | ID |
@@ -68,7 +72,7 @@ For Management-project issues, use `Firefighting` (`13600`) or `Placeholder Pod`
 | UAT | `10261` |
 | Production | `10260` |
 
-For Management-project issues, use `Master` (`10328`).
+When in doubt, default to `Master` (`10328`).
 
 ### Requires Documentation (`customfield_10694`)
 | Name | ID |
