@@ -7,11 +7,116 @@ description: ProFinda Jira workflow for agents. Covers PRD in Epic description, 
 
 Use `mcp-atlassian` MCP tools for all Jira operations (`jira_get_issue`, `jira_create_issue`, `jira_update_issue`, `jira_transition_issue`, `jira_add_comment`, `jira_get_transitions`, `jira_batch_create_issues`). Always call `jira_get_transitions` before transitioning — IDs vary by current state.
 
-When creating Tasks, these custom fields are required in `additional_fields`:
+- **Instance**: `https://profinda.atlassian.net` · **Default project**: `SP` · **Board**: `175` (scrum)
+- Raw CLI/REST mechanics (auth, generic field-discovery queries) live in the separate `jira-cli` skill — this skill owns ProFinda's actual field IDs, required-fields-by-type, and workflow policy below. Use `jira_search_fields` + `jira_get_field_options` to verify/refresh any field option ID that looks stale.
+
+## Required fields by issue type (`additional_fields`)
+
+### Task
+| Field | Key | Required |
+|---|---|---|
+| Fix Version | `fixVersions` | Yes |
+| Pod | `customfield_10988` | Yes |
+| Requires Documentation | `customfield_10694` | Yes |
+| Environment | `customfield_10598` | Yes |
+| Source (category) | `customfield_11021` | Yes |
+
+Common default combo for a quick internal/technical Task (current quarter, Firefighting pod, Master env, no docs needed):
 ```json
 {"fixVersions": [{"id": "10421"}], "customfield_10988": {"id": "13600"}, "customfield_10694": {"id": "11070"}, "customfield_10598": {"id": "10328"}, "customfield_11021": {"id": "11140"}}
 ```
-Use `jira_search_fields` + `jira_get_field_options` to discover or verify field option IDs dynamically.
+
+### Bug
+| Field | Key | Required |
+|---|---|---|
+| Priority | `priority` | Yes |
+| Pod | `customfield_10988` | Yes |
+| Environment | `customfield_10598` | Yes |
+| Source (category) | `customfield_11021` | Yes |
+
+Bug does **not** require `fixVersions` or Requires Documentation.
+
+### Story / Epic
+Required fields differ from Task/Bug — check dynamically with `jira_get_create_fields` rather than assuming.
+
+## Field option reference
+
+### Pod (`customfield_10988`)
+| Name | ID |
+|---|---|
+| Audit | `13806` |
+| Booking 99 | `11000` |
+| Design (Internal) | `11003` |
+| DevOps | `13598` |
+| Dynamic Insights | `13773` |
+| Firefighting | `13600` |
+| Integrations | `13599` |
+| Placeholder Pod | `13740` |
+| Profile & Search | `11001` |
+| Reporting & Insights | `11002` |
+| Skills | `13739` |
+| Squirtle Squad | `13938` |
+
+For Management-project issues, use `Firefighting` (`13600`) or `Placeholder Pod` (`13740`).
+
+### Environment (`customfield_10598`)
+| Name | ID |
+|---|---|
+| Preview Environments | `11252` |
+| Master | `10328` |
+| Integration | `10317` |
+| UAT | `10261` |
+| Production | `10260` |
+
+For Management-project issues, use `Master` (`10328`).
+
+### Requires Documentation (`customfield_10694`)
+| Name | ID |
+|---|---|
+| New | `10600` |
+| Change To Existing | `10601` |
+| None Required | `11070` |
+
+### Source / category (`customfield_11021`)
+| Name | ID |
+|---|---|
+| Customer Specific Change (CR) | `11137` |
+| Customer Specific Change (Unplanned) | `12156` |
+| Customer Task | `11142` |
+| Development Task | `11143` |
+| Firefighting | `11536` |
+| Product Gap | `11139` |
+| Product Roadmap | `11136` |
+| Product Roadmap (Customer Driven) | `11138` |
+| Product Roadmap (Unplanned) | `12155` |
+| Regression (Existing) | `11499` |
+| Regression (Quarterly Work) | `11744` |
+| Tech Roadmap | `11141` |
+| Technical Debt | `11140` |
+
+### Fix Versions
+Pick the version matching the current quarter; for unplanned/internal work use the current or next quarter. IDs change every quarter — verify with `jira_get_project_versions` rather than trusting a stale list here.
+
+### Priority
+| Name | ID |
+|---|---|
+| P1 | `1` |
+| P2 | `2` |
+| P3 | `3` |
+| P4 | `4` |
+
+### Issue Types
+| Name | ID | Sub-task? |
+|---|---|---|
+| Story | `10000` | No |
+| Task | `10001` | No |
+| Sub-task | `10002` | Yes |
+| Bug | `10003` | No |
+| Epic | `10004` | No |
+| Internal Bug | `10113` | No |
+| Technical Issue | `10179` | No |
+| Design | `10189` | No |
+| Design Task | `10184` | Yes |
 
 ## When the developer provides a Jira ID
 
@@ -53,6 +158,8 @@ If confirmed, create via `jira_create_issue` then follow the flow above.
 | Work units that could run in parallel or be picked up independently, or that a handoff leaves for a future session/agent | Ordered steps within a single atomic unit, all done in the current session |
 | More than ~4 steps | 3 steps or fewer |
 | Steps span multiple sessions or agents | All steps done in one go |
+
+Create one with `jira_create_issue(issue_type="Subtask", additional_fields={"parent": "SP-XXXX"})` — use the parent's key, not `epicKey`/`epic_link` (those are for linking Stories/Tasks to an Epic, not a sub-task to its parent).
 
 ## Description templates
 
@@ -141,6 +248,29 @@ Context:
 Blockers:
 - None
 ```
+
+## Transitions and closing
+
+Available transitions vary by current state — always call `jira_get_transitions` rather than assuming. Known transitions from "In Progress": `Parked`, `Blocked`, `Closed`, `Waiting Review`, `Cancel`.
+
+- **Starting work**: transition to `In Progress`.
+- **PR opened**: transition to `Waiting Review` + add the PR URL as a comment.
+- **Merged**: transition to `Closed` (or auto-closed by the PR).
+
+Required fields on the `Closed` transition are screen-config driven and differ by hierarchy level:
+
+- **Sub-task**: only **Resolution** is required. Closing is a one-liner — no story points, release notes, source, or fix version.
+- **Task / Story / Epic**: also requires **Resolution + Sum of Story Points (`customfield_10599`) + Source/category (`customfield_11021`) + Fix Version**, and a validator may additionally require **Release notes (`customfield_10578`)** to already be set before transitioning.
+
+Two gotchas:
+- `Story Points` (`customfield_10022`) is often **not** on the transition screen even when a validator asks for "Story Points" — the screen field is `Sum of Story Points` (`customfield_10599`). Set that one, not `10022`.
+- Moving an Epic to `In Progress` may require walking the ladder `Backlog → In refinement → Ready for Dev → In Progress`, and `Ready for Dev` requires Pod + T-shirt size + Fix Version.
+
+## `mcp-atlassian` markdown-to-ADF gotcha
+
+`mcp-atlassian`'s markdown-to-ADF conversion generally works fine (bold, headings, and inline code all convert correctly for normal content). But it can break on descriptions that are long and dense with special characters throughout (many underscores from identifiers like `lite_api`/`profinda_saas`, literal `{`/`}` from shell or JSON snippets quoted inside a backtick span, nested quotes inside a code span, etc.). When it breaks, the failure isn't localized — headings/bold/code throughout the *entire* description come out as literal Jira wiki-markup text (`h2. Why`, `\*bold\*`, `{{code span}}`) instead of real formatting, even in sections that individually look fine. Bullet lists and markdown links are comparatively robust.
+
+Practical fix: avoid quoting complex shell/JSON snippets verbatim inside a single backtick span (paraphrase instead, or drop them into their own fenced code block); if that alone doesn't fix it, build the ADF `description` by hand instead of relying on `mcp-atlassian`'s conversion. For the coloured section banners used in this skill's `templates/` (`Epic`/`Story`/`Task`/`Subtask` in `profinda-jira/templates/`), you must build ADF directly anyway — `mcp-atlassian` has no concept of coloured banners. Reuse `templates/adf/generate.py`'s `md_to_adf()` function: write the description as Markdown using its supported subset (headings, `## {green|teal|navy|red|orange} Title` banners, single-line paragraphs, bullet/task lists, tables, blockquotes — no inline bold/code marks, block-level structure only), convert with that function, then `PUT` the resulting ADF JSON straight into `fields.description` via the REST API (skip `mcp-atlassian` for this). After creating/updating a description this way, always spot-check it by fetching the issue URL in a browser rather than trusting the tool call succeeded cleanly.
 
 ## Commit discipline
 
