@@ -1,6 +1,6 @@
 ---
 name: profinda-jira
-description: ProFinda Jira workflow for agents. Covers PRD in Epic description, User Stories, sub-tasks as progress tracker, and HANDOFF comments for session continuity. Use when user provides a Jira ticket ID (SP-XXXX), asks to start work on a ticket, or when no ticket exists and the agent should offer to create one.
+description: ProFinda Jira workflow for agents. Covers PRD in Epic description, User Stories, sub-tasks as progress tracker and as the vehicle for handing off remaining work between sessions/agents, and short HANDOFF comments for pointers/context. Use when user provides a Jira ticket ID (SP-XXXX), asks to start work on a ticket, or when no ticket exists and the agent should offer to create one.
 ---
 
 # ProFinda Jira Workflow
@@ -16,7 +16,7 @@ Use `jira_search_fields` + `jira_get_field_options` to discover or verify field 
 ## When the developer provides a Jira ID
 
 1. **Read the ticket** — `jira_get_issue` with `comment_limit: 10`
-2. **Check for HANDOFF comment** — scan comments for `[AGENT HANDOFF]`; if found, resume from it
+2. **Check for open sub-tasks and a HANDOFF comment** — open sub-tasks carry the actual plan for remaining work (read their descriptions); scan comments for `[AGENT HANDOFF]` for a short pointer to which ones and any non-work context (gotchas, decisions)
 3. **Restate the acceptance criteria** (read-only — uses only `jira_get_issue`):
    - Read the `## Acceptance criteria` section and description.
    - If AC are missing or thin, say so plainly and ask the developer to clarify. Do NOT write acceptance criteria back to Jira.
@@ -50,7 +50,7 @@ If confirmed, create via `jira_create_issue` then follow the flow above.
 
 | Use sub-tasks | Use description checklist |
 |---|---|
-| Work units that could run in parallel or be picked up independently | Ordered steps within a single atomic unit |
+| Work units that could run in parallel or be picked up independently, or that a handoff leaves for a future session/agent | Ordered steps within a single atomic unit, all done in the current session |
 | More than ~4 steps | 3 steps or fewer |
 | Steps span multiple sessions or agents | All steps done in one go |
 
@@ -111,9 +111,17 @@ Trade-offs made, alternatives considered.
 Anything that could affect the approach.
 ```
 
-## HANDOFF comment
+## Handing off remaining work
 
-Only when the developer requests it or an explicit agent handoff is happening. Post on the Story or Task, not the Epic.
+When a session ends with work still to do, don't leave "what's next" as bullet points in a comment — a comment can't be transitioned, assigned, or linked as a unit of work, and it forces the next agent to re-parse prose into a plan. Instead:
+
+1. **Create a sub-task per remaining unit of work** (or update an existing one), each with a description following the Task template above (What and why / Approach / Key decisions / Risks). Do this even if only one agent/session ever picks it up — the sub-task is the plan, not a comment about the plan.
+2. **Post a short comment** noting what was completed this session and linking the sub-task(s) that carry what's left. Don't restate their content in the comment.
+3. The next session's prompt can then be as simple as "pick up SP-XXXX-Y" — the agent reads that sub-task's description for its plan, and the parent Story/Task + Epic for wider context.
+
+Reserve a narrative comment for things that are genuinely not a unit of trackable work: environment gotchas, decisions/trade-offs made and why, or context a future session would otherwise waste time rediscovering.
+
+Only post the comment below when the developer requests it or an explicit agent handoff is happening. Post on the Story or Task, not the Epic.
 
 ```
 [AGENT HANDOFF]
@@ -124,11 +132,11 @@ Worktree: .worktrees/SP-XXXX-short-description (if applicable)
 Completed:
 - SP-XXXX sub-task title
 
-Next:
-- SP-XXXY what to do and why
+Next: see SP-XXXY, SP-XXXZ (sub-tasks created/updated this session)
 
 Context:
 - Chose X over Y because of Z constraint in lib/foo.rb:42
+- Gotcha: <environment quirk that isn't itself a work item>
 
 Blockers:
 - None
@@ -146,7 +154,8 @@ No PRD files, no agent state files left in the repo. Jira is the record.
 
 - [ ] Description written (spec + plan) before implementation started
 - [ ] Completed sub-tasks transitioned to Done
+- [ ] Remaining work captured as sub-task(s) with a plan in their description — not as bullet points in a comment
 - [ ] Description reflects final understanding (decisions, deviations from plan)
 - [ ] Ticket in correct state (In Progress / Waiting Review / Closed)
 
-Post a HANDOFF comment only if the developer asks for it, or if explicitly handing off to another agent or session.
+Post a HANDOFF comment only if the developer asks for it, or if explicitly handing off to another agent or session — and even then, keep it short: link the sub-task(s) for what's next rather than describing them.
