@@ -134,6 +134,37 @@ Blockers:
 - None
 ```
 
+## Closing a ticket (Done / Closed)
+
+SP's "Closed (Any Status)" transition has a workflow validator that isn't
+reflected in `jira_get_transitions` or `expand=transitions.fields` — that API
+only reports `resolution` as required, but the actual transition screen also
+enforces two custom fields. Skip the browser by setting them directly:
+
+1. `jira_get_transitions(issue_key)` — find the "Closed (Any Status)" id (varies
+   by current status).
+2. `jira_update_issue(issue_key, fields={...})` to set, before transitioning:
+   - `customfield_10690` ("FF Resolution Summary") — free text, non-empty. One
+     or two sentences on what fixed it / why it's resolved.
+   - `customfield_10599` ("Sum of Story Points") — number. Must be non-zero for
+     **Bug** issue types (the validator's own error says "Enter 0 if it is not
+     a BUG" — 0 is fine for other types). Nominally "automated" (summed from
+     sub-tasks) but is a plain editable field when there are none.
+3. `jira_transition_issue(issue_key, transition_id, fields={"resolution": {"name": "Done"}})`
+   — `name` must be a value from `GET /rest/api/3/resolution` (`Done`, `Won't Do`,
+   `Duplicate`, `Cannot Reproduce`, `Declined`, `Ready for production`,
+   `Client resolved`, `Tested after Merge`, `Development finished`,
+   `Workaround Provided`, ...). `"Fixed"` is **not** a valid name and will error.
+
+Both custom fields are plain editable fields via `jira_update_issue` (not
+gated to the transition screen), so steps 2 and 3 don't need to happen in the
+same call — set them first, then transition.
+
+If this starts failing again (workflow changes over time), the fastest way to
+find the real required fields is the transition screen in the Jira UI itself
+(click the status pill → pick the target status → read the form), since
+Cloud's screen-based validators aren't fully exposed via the REST API.
+
 ## Commit discipline
 
 ```
