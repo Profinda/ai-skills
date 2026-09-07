@@ -91,8 +91,6 @@ module ModuleName
     class Create < Opera::Operation::Base
       context do
         attr_accessor :record
-        # schema_output (validate :schema) and find_template_output (operation :find_template)
-        # are auto-created readers — no need to declare them.
       end
 
       dependencies do
@@ -228,7 +226,7 @@ result.executions               # array of executed step names (debugging)
 
 ## Context Auto-Population
 
-`validate`, `operation`, and `operations` automatically store outputs in context AND auto-create matching `attr_reader`s (opera >= 0.7.2) — just call them, no declaration needed:
+`validate`, `operation`, and `operations` automatically store outputs in context AND auto-create matching `attr_reader`s - just call them, no declaration needed:
 
 ```ruby
 validate :schema          # => schema_output          (validated params hash)
