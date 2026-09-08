@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProFinda · Background base (dark)</title>
+<!--
+  Drop-in, self-contained ProFinda dark-theme base.
+  Ships: brand tokens, glow field, living constellation (reduced-motion safe),
+  .accent gradient-text helper, and a glass card. Put your content inside
+  #content. No external fonts/scripts/images.
+-->
+<style>
+:root{
+  /* Brand palette (canonical) */
+  --blue-1:#01338B; --blue-2:#1072EB; --blue-3:#0094FF;
+  --teal:#0EAD9A;   --green:#8CC63F;
+  --carbon-1:#131E2D; --carbon-2:#1D2D3D; --carbon-3:#203142;
+  --steel-1:#354556;  --steel-2:#405466;  --steel-3:#A6B9BF;
+  --white:#FFFFFF; --gray-1:#EEEEEE; --gray-2:#DDDDDD;
+  --grad-brand:linear-gradient(92deg,var(--blue-3),var(--teal),var(--green));
+  --grad-carbon:linear-gradient(180deg,var(--carbon-3),var(--carbon-1));
+  /* Dark-theme roles (derived) */
+  --canvas:var(--carbon-1);
+  --surface:rgba(255,255,255,.045);
+  --line:rgba(255,255,255,.09);
+  --ink:#EAF1F8; --muted:#C7D2DE; --muted2:#8FA1B3;
+  --accent:var(--teal); --accent-2:var(--green);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Mulish','Inter',system-ui,-apple-system,sans-serif;
+  background:var(--carbon-1); color:var(--ink);
+  -webkit-font-smoothing:antialiased; min-height:100%;
+}
+h1,h2,h3,h4{line-height:1.06;font-weight:900;letter-spacing:-.02em}
+::selection{background:rgba(14,173,154,.35)}
+
+.accent{background:var(--grad-brand);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.eyebrow{display:inline-flex;align-items:center;gap:11px;font-size:13px;font-weight:800;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+.eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 5px rgba(14,173,154,.18)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+  padding:26px;backdrop-filter:blur(8px)}
+
+/* ---- Background system ---- */
+#stage{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.bg-glow{position:absolute;inset:0;
+  background:
+    radial-gradient(1100px 620px at 82% -8%, rgba(14,173,154,.20), transparent 60%),
+    radial-gradient(900px 520px at 6% 116%, rgba(0,148,255,.16), transparent 55%),
+    radial-gradient(700px 500px at 50% 120%, rgba(140,198,63,.10), transparent 60%),
+    linear-gradient(160deg, var(--carbon-1) 0%, #0C1622 100%);
+}
+.bg-net{position:absolute;inset:0;opacity:.45}
+.grain{position:absolute;inset:0;opacity:.05;
+  background-image:radial-gradient(rgba(255,255,255,.6) .5px,transparent .5px);
+  background-size:3px 3px;}
+
+#content{position:relative;z-index:2;min-height:100%;
+  display:flex;align-items:center;justify-content:center;padding:clamp(28px,4.4vw,84px)}
+</style>
+</head>
+<body>
+<div id="stage" aria-hidden="true">
+  <div class="bg-glow"></div>
+  <svg class="bg-net" id="bgNet" viewBox="0 0 1440 810" preserveAspectRatio="xMidYMid slice">
+    <defs><radialGradient id="ng"><stop offset="0%" stop-color="#0EAD9A"/><stop offset="100%" stop-color="#8CC63F"/></radialGradient></defs>
+    <g id="netLines" stroke="rgba(255,255,255,.10)" stroke-width="1" fill="none"></g>
+    <g id="netNodes"></g>
+  </svg>
+  <div class="grain"></div>
+</div>
+
+<!-- Replace with your content -->
+<main id="content">
+  <div class="card" style="max-width:640px">
+    <div class="eyebrow"><span class="dot"></span>ProFinda · Design base</div>
+    <h1 style="font-size:clamp(34px,6vw,68px);margin-top:18px">
+      Build in the <span class="accent">ProFinda</span> language.
+    </h1>
+    <p style="color:var(--muted);font-weight:500;line-height:1.5;margin-top:18px;max-width:52ch">
+      This file ships the dark-theme canvas, brand tokens, glow field and living
+      constellation. Drop your content into <code>#content</code>. See the skill's
+      REFERENCE.md for the full component set.
+    </p>
+  </div>
+</main>
+
+<script>
+/* Living constellation — ambient, reduced-motion safe. */
+(function(){
+  const SVGNS='http://www.w3.org/2000/svg';
+  const W=1440,H=810,N=30,LINK=210;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const nodes=[];
+  for(let i=0;i<N;i++){
+    const x=Math.random()*W, y=Math.random()*H;
+    nodes.push({x,y,tx:x,ty:y,r:1.4+Math.random()*3.2,
+      vx:(Math.random()-.5)*0.05, vy:(Math.random()-.5)*0.05,
+      ph:Math.random()*Math.PI*2, sp:0.15+Math.random()*0.25});
+  }
+  const gLines=document.getElementById('netLines');
+  const gNodes=document.getElementById('netNodes');
+  const circles=nodes.map(n=>{const c=document.createElementNS(SVGNS,'circle');
+    c.setAttribute('r',n.r.toFixed(1));c.setAttribute('fill','url(#ng)');gNodes.appendChild(c);return c;});
+  const pairs=[]; const lineEls=[];
+  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){pairs.push([i,j]);
+    const ln=document.createElementNS(SVGNS,'line');gLines.appendChild(ln);lineEls.push(ln);}
+  function draw(){
+    for(let i=0;i<N;i++){const n=nodes[i];circles[i].setAttribute('cx',n.x.toFixed(1));circles[i].setAttribute('cy',n.y.toFixed(1));}
+    for(let k=0;k<pairs.length;k++){
+      const [i,j]=pairs[k], a=nodes[i], b=nodes[j];
+      const d=Math.hypot(a.x-b.x,a.y-b.y), ln=lineEls[k];
+      if(d<LINK){ln.setAttribute('x1',a.x.toFixed(1));ln.setAttribute('y1',a.y.toFixed(1));
+        ln.setAttribute('x2',b.x.toFixed(1));ln.setAttribute('y2',b.y.toFixed(1));
+        ln.setAttribute('stroke-opacity',(1-d/LINK).toFixed(2));ln.style.display='';}
+      else ln.style.display='none';
+    }
+  }
+  if(reduce){ draw(); return; }
+  let t=0;
+  function tick(){
+    t+=0.016;
+    for(const n of nodes){
+      n.x+=(n.tx-n.x)*0.012; n.y+=(n.ty-n.y)*0.012;
+      n.tx+=n.vx; n.ty+=n.vy;
+      if(n.tx<20||n.tx>W-20)n.vx*=-1; if(n.ty<20||n.ty>H-20)n.vy*=-1;
+      n.x+=Math.cos(t*n.sp+n.ph)*0.06; n.y+=Math.sin(t*n.sp+n.ph)*0.06;
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+  draw();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
