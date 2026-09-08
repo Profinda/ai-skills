@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Build the self-contained ProFinda Product Roadmap presentation (single HTML file, base64 assets)."""
+"""EXAMPLE: the ProFinda Product Roadmap deck (self-contained single HTML file).
+
+This is a real deck kept as a worked example / reference build. It predates the
+generic engine in ../../assets/build_deck.py and hand-authors its own slides;
+new decks should use that engine with a content list instead. Retained because
+it's the origin of the 3D flythrough + Horizon theming and a useful reference.
+"""
 import json, os, pathlib
 
 HERE = pathlib.Path(__file__).resolve().parent
-# Logo asset resolves next to this script; output dir overridable via PF_DECK_OUT.
-LOGO = pathlib.Path(os.environ.get("PF_DECK_LOGO", HERE / "pf_logo.txt")).read_text().strip()
+# Shared logo lives in the skill's assets/; output dir overridable via PF_DECK_OUT.
+LOGO = pathlib.Path(os.environ.get("PF_DECK_LOGO", HERE.parent.parent / "assets" / "pf_logo.txt")).read_text().strip()
 OUT_DIR = pathlib.Path(os.environ.get("PF_DECK_OUT", HERE))
 
 # 14 initiatives. keywords = decomposition chips (legacy names / head-of-product alt names / sub-themes).

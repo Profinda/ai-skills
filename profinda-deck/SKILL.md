@@ -1,83 +1,94 @@
 ---
 name: profinda-deck
-description: Build ProFinda presentation decks — self-contained single-file HTML slide decks in the ProFinda design language, with keyboard/click navigation, speaker notes, a living-constellation background, hero glyphs and (optionally) a 3D flythrough between slides plus Horizon accent theming. Use when the user wants a ProFinda slide deck, roadmap presentation, pitch deck, or asks to build/update the Product Roadmap deck. Builds on the profinda-design skill.
+description: Build ProFinda presentation decks from content, not markup. A content-driven engine turns a Python list of slide dicts into a single self-contained HTML deck in the ProFinda design language — 17 layouts (title, section, statement, quote, bullets, two-column, media, gallery, charts, stats, big-number, cards, table, timeline, compare, feature, closing), inline SVG charts, embedded media, a 3D star-cloud flythrough, speaker notes, keyboard/click/swipe nav, and per-slide Horizon accent theming (H1 brand / H2 amber / H3 orange-red). Use when the user wants a ProFinda slide deck, roadmap/pitch/QBR/review presentation, or to add slides to one. Builds on profinda-design.
 ---
 
 # ProFinda Decks
 
-Build slide decks that look and feel like ProFinda: a single self-contained HTML file (base64 assets, no external resources), navigable by arrows/click/swipe, with toggleable speaker notes, the constellation background, hero glyphs, chips/pills/stat cards, and staggered entrance motion.
+Build a deck by writing **content** — a list of slide dicts — and letting the engine render a ProFinda-branded, self-contained HTML deck. You never hand-write HTML/CSS. Follows the **`profinda-design`** language (load that skill for palette/type/components).
 
-Follows the **`profinda-design`** language — load that skill for the palette, tokens, typography, components and motion. This skill is the deck-specific builder on top of it.
+## Quick start
 
-## Two reference builds (bundled)
+```python
+# my_deck.py
+from build_deck import build   # assets/build_deck.py
 
-Both are Python scripts that assemble one HTML file. **Edit the script and re-run it — never hand-edit the generated HTML** (it gets overwritten).
-
-| Script | Output | Use |
-|---|---|---|
-| [assets/build_deck.py](assets/build_deck.py) | `ProFinda-Product-Roadmap.html` | The flat deck: 2D cross-fade slide transitions. Simpler, lighter. |
-| [assets/build_deck_3d.py](assets/build_deck_3d.py) | `ProFinda-Product-Roadmap-3D.html` | The 3D deck: camera flies through a star volume, slides arrive from the new angle. Adds **Horizon accent theming**. |
-
-The bundled `ProFinda-Product-Roadmap-3D.html` reference (open the version in `~/Downloads/` or rebuild) is the canonical look:
-`file:///Users/kikorb/Downloads/ProFinda-Product-Roadmap-3D.html`
-
-### Assets
-- `assets/pf_logo.txt` — base64 ProFinda logo, embedded into the deck. Bundled so the scripts are portable.
-
-## Build
+SLIDES = [
+    {"layout": "cover", "title": 'Q3 <span class="accent">Business Review</span>',
+     "subtitle": "Where we are, where we're going.",
+     "notes": "Open warm; set the agenda."},
+    {"layout": "bullets", "title": "Agenda",
+     "items": ["Results", "What worked", "Next quarter"]},
+    {"layout": "chart", "title": "Revenue", "eyebrow": "Results",
+     "chart": {"type": "bar", "data": [["Q1", 120], ["Q2", 210], ["Q3", 340]]}},
+    {"layout": "closing", "title": 'Thank you.', "subtitle": "Questions?"},
+]
+build(SLIDES, title="Q3 Business Review", out="Q3-Review.html")
+```
 
 ```bash
-# writes the .html next to the script by default
-python3 assets/build_deck_3d.py
-# or choose an output directory:
-PF_DECK_OUT=~/Downloads python3 assets/build_deck_3d.py
+python3 my_deck.py                       # writes ./Q3-Review.html
+PF_DECK_OUT=~/Desktop python3 my_deck.py # choose output dir
+python3 assets/build_deck.py --demo      # build the full layout showcase
 ```
 
-Env overrides: `PF_DECK_OUT` (output dir), `PF_DECK_LOGO` (alternate logo txt).
+The **layout showcase** (`assets/demo_content.py`) renders every layout and the Horizon themes — read it as living documentation and copy slides from it.
 
-## Structure of a deck script
+## The slide model
 
-- `INITIATIVES` (or your content list) — the data that drives the repeated slides (title, summary, "why", keyword chips, clients, speaker `notes`).
-- Inline `add(html, section, note)` calls build the framing slides (cover, philosophy, part band, close).
-- One `<style>` block carries the full design language (copied from `profinda-design`).
-- A small nav engine handles keys (← → ↑ ↓ PageUp/Down, Home/End, F fullscreen, N notes), click-to-advance, dots, swipe.
+Every slide is a dict: `{"layout": <name>, ...fields}`. On **any** slide:
+- `notes` — speaker notes (toggle with the on-cover control or `N`).
+- `horizon` — `"h1"` (default, brand teal/green), `"h2"` (amber), `"h3"` (orange→red). Sets the accent for that slide; the **whole deck eases** to it as you arrive. Phasing only — not decoration, not status.
+- `section` — the label shown top-right.
+- Text fields accept inline HTML, so `<span class="accent">word</span>`, `<br>`, `&rarr;` etc. all work.
 
-To change content: edit the data list / `add()` calls and rebuild. To restyle: edit the `:root` tokens and component CSS — keep them aligned with `profinda-design`.
+## Layout catalog
 
-## Horizon accent theming (the 3D deck)
+| layout | key fields |
+|---|---|
+| `cover` | `title`, `subtitle?`, `eyebrow?`, `stats?[{kicker,value,label,horizon}]`, `logo?` |
+| `section` | `title`, `kicker?`, `body?` |
+| `statement` | `title`, `body?`, `eyebrow?` |
+| `quote` | `quote`, `attribution?`, `eyebrow?` |
+| `bullets` | `title`, `items[str \| {text,icon}]`, `body?`, `eyebrow?` |
+| `two-col` | `left`, `right` (each: `{heading,body}` / `{bullets}` / `{chart}` / `{media}` / `{glyph}`), `title?` |
+| `media` | `media` (path / URL / data-URI), `caption?`, `title?`, `body?` |
+| `gallery` | `items[{media,caption?}]`, `title?` |
+| `chart` | `chart{type:bar\|line\|donut, data:[[label,value]], legend?}`, `title?`, `body?` |
+| `stats` | `stats[{value,label,kicker?,horizon?}]`, `title?` |
+| `big-number` | `value`, `label`, `body?` |
+| `cards` | `cards[{heading,body,icon?}]`, `title?` |
+| `table` | `columns[]`, `rows[[]]`, `title?` |
+| `timeline` | `items[{when,heading,body}]`, `title?` |
+| `compare` | `left{heading,items[]}`, `right{heading,items[]}` (right = the "pro" side), `title?` |
+| `feature` | `title`, `body?`, `tag?`, `aka?`, `why?`, `why_label?`, `chips?[]`, `chips_label?`, `glyph?`, `index?`, `of?` — the hero-glyph "one big thing" slide |
+| `closing` | `title`, `subtitle?`, `points?[]`, `logo?` |
 
-ProFinda's colours are **blue, teal, green**. For roadmap **horizons** the 3D deck extends the accent palette with a warm ramp so the phase reads instantly. These are contextual accents for phasing, **not** new brand colours or status colours.
+**Icons** (bullets/cards/feature glyph): `spark chart list globe gear loop coin doc sparkle future grid rocket target shield users check cross clock bolt layers star`. Add more in `ICONS` in `build_deck.py` (keep the stroked-line style).
 
-| Horizon | Meaning | A → B |
-|---|---|---|
-| Horizon 1 | Core / near-term (brand) | Teal `#0EAD9A` → Green `#8CC63F` |
-| Horizon 2 | Next bets | Amber `#F6C445` → Gold `#E8A317` |
-| Horizon 3 | Future / exploratory | Orange `#F97316` → Red `#E23B2E` |
+**Charts** are rendered as inline SVG at build time from your data — self-contained, and they adopt the slide's Horizon accent.
 
-Implemented as themeable accent variables that every accent surface eases between:
+**Media**: local file paths are embedded as base64 (deck stays standalone); URLs and `data:` URIs pass through. `.mp4/.webm/.mov` render as autoplay-muted-loop video.
 
-```css
-:root{ --accA:var(--teal); --accB:var(--lime); /* Horizon 1 = default */
-  --h2a:#F6C445; --h2b:#E8A317; --h2-dark:#B77C0C;
-  --h3a:#F97316; --h3b:#E23B2E; --h3-dark:#B4231A; }
-body.h2{ --accA:var(--h2a); --accB:var(--h2b); /* + glows */ }
-body.h3{ --accA:var(--h3a); --accB:var(--h3b); /* + glows */ }
-```
+## Files
 
-Add `h2` / `h3` to `<body>` (or per-`.stat` card the `h2`/`h3` class) for the horizon being shown; leave off for Horizon 1. All accent surfaces transition smoothly (0.9s ease) as horizons switch.
+- `assets/build_deck.py` — the engine + `build()`. Import it, or run with `--demo`.
+- `assets/demo_content.py` — the layout showcase (every layout + H2/H3).
+- `assets/pf_logo.txt` — base64 logo, embedded into every deck.
+- `examples/roadmap/` — a real, hand-authored deck kept as a reference build (origin of the 3D flythrough + Horizon theming). New decks should use the engine, not copy this.
+
+Env: `PF_DECK_OUT` (output dir), `PF_DECK_LOGO` (alternate logo).
 
 ## Guardrails
 
-- Keep the deck **fully self-contained**: no external fonts/scripts/images. Verify: `grep -c 'data:image/png;base64'` stays `2`, and there are **no** `src=`/`href=` `http(s)` refs.
-- Don't break navigation (arrows, click, dots, swipe, F, Home/End, N notes).
-- Edit the **script**, regenerate; don't hand-patch the HTML.
-- Match `profinda-design`: navy canvas, teal/green brand accents, Mulish, glass cards, glow + constellation, staggered entrances.
-- Horizon amber/orange/red is for phasing only — default to brand teal→green.
-- Honour `prefers-reduced-motion` (both scripts already fall back to static/fade).
+- Self-contained always: no external fonts/scripts/images. Local media is embedded; verify no `src=`/`href=` `http(s)` refs remain.
+- Write **content**; don't hand-author slide HTML. If a layout is missing, add a renderer to `LAYOUTS` in `build_deck.py` rather than injecting raw markup.
+- Match `profinda-design`: brand teal/green, Mulish, glass, glow + star cloud, staggered entrances. Horizon amber/orange/red is phasing only.
+- Honour `prefers-reduced-motion` (the engine already falls back to static/fade).
 
 ## Definition of done
 
-- Script runs, writes one HTML file, opens standalone by double-click.
-- Self-contained (2 base64 images, 0 external resource refs).
-- Navigation + speaker-notes toggle (and `N`) work across all slides.
-- Any Horizon 2/3 content uses the warm accents; everything else stays brand.
+- `build()` runs, writes one HTML file that opens standalone by double-click.
+- Self-contained (only base64 assets, 0 external resource refs).
+- Nav + speaker-notes (`N`) work; Horizon 2/3 slides retheme the whole deck.
+- Content lives in a slide list; no bespoke HTML per slide.
