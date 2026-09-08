@@ -70,6 +70,28 @@ Two canonical gradients (per the brand sheet):
 
 Never fill large flat areas with a brand accent. Accents live as gradients on text, thin rules, small dots, borders, and glows.
 
+### Horizon accents (roadmap phasing)
+
+ProFinda's colours are **blue, teal and green**. That is the brand, and it is the default for everything. But when we document **roadmap horizons** — near-term vs. later bets — we extend the accent palette with a warm ramp so the phase reads at a glance. These are **contextual accents, not new brand colours**: only use them to distinguish Horizon 2 / Horizon 3 initiatives or projects.
+
+| Horizon | Meaning | Accent A | Accent B | Dark |
+|---|---|---|---|---|
+| **Horizon 1** | Core / near-term (the brand) | Teal `#0EAD9A` | Green `#8CC63F` | `#0A8377` |
+| **Horizon 2** | Next bets (warm amber / gold) | `#F6C445` | `#E8A317` | `#B77C0C` |
+| **Horizon 3** | Future / exploratory (orange → red) | `#F97316` | `#E23B2E` | `#B4231A` |
+
+Applied exactly like the brand accent (gradient A→B on text/rules/indicators, glows from an rgba of A). Horizon 1 stays teal→green, so anything not explicitly a Horizon 2/3 item uses the normal brand accent.
+
+```css
+:root{
+  /* Horizon 1 = brand (teal→green). */
+  --h2a:#F6C445; --h2b:#E8A317; --h2-dark:#B77C0C;   /* Horizon 2: warm amber/gold */
+  --h3a:#F97316; --h3b:#E23B2E; --h3-dark:#B4231A;   /* Horizon 3: orange→red      */
+}
+```
+
+Guardrails: don't use amber/orange/red decoratively or for status (success/warning/error) — that's a separate concern. They mean "later horizon" and nothing else. The reference build (`ProFinda-Product-Roadmap-3D.html`) swaps the whole accent palette per horizon via `body.h2` / `body.h3`; see the `profinda-deck` skill.
+
 ## CSS tokens
 
 Copy this as the canonical token set. Theme-specific roles are split into Light and Dark blocks that both reference the same brand values.
@@ -213,6 +235,7 @@ See `assets/profinda-background.html` in the `profinda-design` skill for a drop-
 - Treat the **brand hexes as canonical**; derive theme roles from them, don't invent new hero colours.
 - Don't tint large surfaces with brand accents; accents are for text, lines, dots, borders, glows.
 - Two "Carbon" ramps exist (deep navy vs. steel slate) — name them explicitly to avoid mixing them up.
+- Horizon amber/orange/red accents are for roadmap phasing only (H2/H3) — not decoration, not status colours. Default to the brand teal→green.
 - Don't mix icon styles; the stroked line set is the system.
 - Don't pull external fonts/scripts/images into deliverables that must be self-contained.
 - Don't ship motion that ignores `prefers-reduced-motion`.
@@ -220,4 +243,4 @@ See `assets/profinda-background.html` in the `profinda-design` skill for a drop-
 
 ## Reference build
 
-`~/Downloads/ProFinda-Product-Roadmap.html` (built by `build_deck.py`) is the canonical self-contained reference for the **dark** theme: palette, glass cards, hero glyphs, constellation background, chips, pills, stat cards, and the entrance/ambient motion. **profinda.com** is the reference for mixing light and dark.
+`~/Downloads/ProFinda-Product-Roadmap.html` (built by `build_deck.py`) is the canonical self-contained reference for the **dark** theme: palette, glass cards, hero glyphs, constellation background, chips, pills, stat cards, and the entrance/ambient motion. **profinda.com** is the reference for mixing light and dark. For **presentations specifically**, the 3D flythrough deck `ProFinda-Product-Roadmap-3D.html` (built by `build_deck_3d.py`) adds the Horizon accent theming and the 3D slide transitions — see the `profinda-deck` skill.

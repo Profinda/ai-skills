@@ -41,7 +41,8 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | Skill | Description |
 |---|---|
 | `profinda-adr` | Create and maintain Architecture Decision Records |
-| `profinda-design` | Build in ProFinda's design language (product UI, prototypes, decks, marketing, docs): brand palette, Light/Dark themes, Mulish type, glass surfaces, line icons, constellation background, components, motion. Ships a drop-in dark background asset. |
+| `profinda-design` | Build in ProFinda's design language (product UI, prototypes, decks, marketing, docs): brand palette, Light/Dark themes, Horizon accents, Mulish type, glass surfaces, line icons, constellation background, components, motion. Ships a drop-in dark background asset. |
+| `profinda-deck` | Build ProFinda presentation decks: self-contained single-file HTML slides with nav, speaker notes, constellation background, hero glyphs and an optional 3D flythrough + Horizon accent theming. Bundles the roadmap build scripts. Builds on `profinda-design`. |
 | `profinda-jira` | Jira workflow: PRD in Epic, Stories, sub-tasks as progress tracker, HANDOFF comments. Uses `mcp-atlassian` MCP. |
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
