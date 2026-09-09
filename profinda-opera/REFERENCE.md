@@ -91,8 +91,6 @@ module ModuleName
     class Create < Opera::Operation::Base
       context do
         attr_accessor :record
-        attr_reader :schema_output        # auto-set by validate :schema
-        attr_reader :find_template_output # auto-set by operation :find_template
       end
 
       dependencies do
@@ -228,7 +226,7 @@ result.executions               # array of executed step names (debugging)
 
 ## Context Auto-Population
 
-`validate`, `operation`, and `operations` automatically store outputs in context:
+`validate`, `operation`, and `operations` automatically store outputs in context AND auto-create matching `attr_reader`s - just call them, no declaration needed:
 
 ```ruby
 validate :schema          # => schema_output          (validated params hash)
@@ -236,13 +234,7 @@ operation :find_record    # => find_record_output      (nested result's output)
 operations :create_batch  # => create_batch_output     ([result1.output, ...])
 ```
 
-Declare readers in the `context` block to access them:
-
-```ruby
-context do
-  attr_reader :schema_output, :find_record_output, :create_batch_output
-end
-```
+Only declare a reader manually if you also need a `default:` fallback or want an `attr_accessor` to reassign it.
 
 ## The `default:` Option
 

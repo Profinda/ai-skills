@@ -15,7 +15,6 @@ module MyModule
     class Create < Opera::Operation::Base
       context do
         attr_accessor :record
-        attr_reader :schema_output
       end
 
       dependencies do
@@ -115,7 +114,7 @@ always :log_info            # 11. Always executes no matter what
 | Mutating `params` directly | `params` is frozen; use `schema_output` or `context` |
 | Using `context_accessor` (legacy) | Use `context do; attr_accessor :name; end` block syntax |
 | Accessing `dependencies[:key]` directly | Declare in `dependencies do; attr_reader :key; end` |
-| Missing `attr_reader` for auto-populated context | Declare `attr_reader :schema_output` in context block |
+| Manually declaring `attr_reader :schema_output` in context | Unnecessary, auto-created readers for `validate`/`operation`/`operations` outputs |
 | `within` wrapper method not yielding | Nested steps silently skipped; wrapper must always `yield` |
 | Using `always` inside `within` or `transaction` | `always` is top-level only |
 | Using `step` for writing history events | Use `operation` for writing history events |
