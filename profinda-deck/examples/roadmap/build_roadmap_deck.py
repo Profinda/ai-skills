@@ -5,6 +5,9 @@ This is a real deck kept as a worked example / reference build. It predates the
 generic engine in ../../assets/build_deck.py and hand-authors its own slides;
 new decks should use that engine with a content list instead. Retained because
 it's the origin of the 3D flythrough + Horizon theming and a useful reference.
+
+Note: newer engine features (per-Horizon star-cloud recolouring and the opt-in
+in-browser Edit mode, build(edit=True)) live in the engine, not this snapshot.
 """
 import json, os, pathlib
 

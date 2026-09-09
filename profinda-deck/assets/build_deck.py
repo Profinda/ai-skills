@@ -420,7 +420,11 @@ def render_slide(s):
 # ---------------------------------------------------------------------------
 # Assemble the deck
 # ---------------------------------------------------------------------------
-def build(slides, title="ProFinda Deck", out="ProFinda-Deck.html", subtitle_counter=True):
+def build(slides, title="ProFinda Deck", out="ProFinda-Deck.html", edit=False, subtitle_counter=True):
+    """Render a deck. Set edit=True to include presenter Edit mode (press E):
+    in-place editing of text/chips/notes, a Save/Export/Reset bar, edits
+    persisted to localStorage and exportable to a fresh baked-in .html.
+    Leave edit=False for clean audience-only decks."""
     payload=[]
     for i,s in enumerate(slides):
         inner=render_slide(s)
@@ -429,13 +433,205 @@ def build(slides, title="ProFinda Deck", out="ProFinda-Deck.html", subtitle_coun
     data_json=json.dumps({"slides":payload}, ensure_ascii=False)
     doc=(TEMPLATE
          .replace("/*__FONTS__*/", _font_face())
+         .replace("/*__EDIT_CSS__*/", EDIT_CSS if edit else "")
+         .replace("<!--__EDIT_BAR__-->", EDIT_BAR if edit else "")
+         .replace("<!--__EDIT_HINT__-->", EDIT_HINT if edit else "")
+         .replace("/*__EDIT_JS__*/", EDIT_JS if edit else "")
          .replace("__TITLE__", esc(title))
          .replace("__LOGO__", logo_src())
          .replace("__DATA__", data_json))
     outp = (OUT_DIR / out) if not os.path.isabs(out) else pathlib.Path(out)
     outp.write_text(doc, encoding="utf-8")
-    print("Wrote", outp, len(doc), "bytes,", len(slides), "slides")
+    print("Wrote", outp, len(doc), "bytes,", len(slides), "slides", "(edit mode)" if edit else "")
     return outp
+
+# ---------------------------------------------------------------------------
+# Edit mode (opt-in via build(edit=True)) — injected into the template when on.
+# ---------------------------------------------------------------------------
+EDIT_CSS = r"""
+/* ---------- Edit mode (presenter-only; toggle with E) ---------- */
+body.editing [data-edit]{outline:1.5px dashed rgba(255,255,255,.22);outline-offset:4px;border-radius:6px;cursor:text;transition:outline-color .15s ease,background .15s ease}
+body.editing [data-edit]:hover{outline-color:var(--accA);background:rgba(255,255,255,.03)}
+body.editing [data-edit]:focus{outline:2px solid var(--accA);background:rgba(255,255,255,.05)}
+body.editing .slide.active .anim{opacity:1 !important;transform:none !important;filter:none !important;transition:none !important}
+body.editing .slide.active .chip{opacity:1 !important;transform:none !important}
+body.editing .kw .chip{position:relative;cursor:text}
+body.editing .kw .chip .chip-x{display:inline-grid;place-items:center;margin-left:8px;width:16px;height:16px;border-radius:50%;background:rgba(226,59,46,.9);color:#fff;font-size:12px;font-weight:900;line-height:1;cursor:pointer;vertical-align:middle}
+body.editing .kw .chip .chip-x::before{content:"\00d7"}
+.chip .chip-x{display:none}
+body.editing .kw .chip-add{cursor:pointer;border-style:dashed;color:var(--accA);opacity:1 !important}
+.chip-add{display:none}
+body.editing .chip-add{display:inline-flex;align-items:center}
+#editBar{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-14px);z-index:60;display:none;align-items:center;gap:12px;padding:9px 14px;border-radius:999px;background:rgba(12,22,34,.92);border:1px solid var(--line);backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.5);opacity:0;transition:opacity .25s ease,transform .25s ease;font-size:13px;color:var(--slate)}
+body.editing #editBar{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+#editBar .eb-tag{font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:10.5px;color:var(--accA)}
+#editBar .eb-dirty{color:var(--h2a);font-weight:700}
+#editBar button{font:inherit;font-weight:800;cursor:pointer;border-radius:999px;padding:7px 16px;border:1px solid var(--line);background:transparent;color:var(--ink);transition:all .15s ease}
+#editBar .eb-save{border-color:var(--accA);color:var(--accA)}
+#editBar .eb-save:hover{background:var(--accA);color:#06121b}
+#editBar .eb-save:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted2);background:transparent}
+#editBar .eb-export:hover{border-color:var(--green);color:var(--green)}
+#editBar .eb-reset:hover{border-color:var(--h3b);color:var(--h3b)}
+body.editing #notesPanel{outline:1.5px dashed rgba(255,255,255,.22);outline-offset:4px}
+body.editing #notesPanel .np-body[contenteditable]{cursor:text;min-height:1.4em}
+"""
+
+EDIT_BAR = r"""
+<div id="editBar" aria-hidden="true">
+  <span class="eb-tag">Edit mode</span>
+  <span class="eb-status" id="ebStatus">No changes</span>
+  <button class="eb-save" id="ebSave" disabled>Save slide</button>
+  <button class="eb-export" id="ebExport" title="Download a copy of the deck with all edits baked in">Export .html</button>
+  <button class="eb-reset" id="ebReset" title="Discard all saved edits">Reset edits</button>
+</div>
+"""
+
+EDIT_HINT = r""" &middot; <span class="key">E</span> edit"""
+
+EDIT_JS = r"""
+/* ---------- Edit mode (presenter-only; toggle with E) ----------
+   In-place editing of slide text, chips and speaker notes. Edits are held in an
+   overrides buffer (localStorage) replayed onto each slide, and can be exported
+   to a fresh self-contained .html with the changes baked in. */
+const EDIT_KEY='pf_overrides_v1';
+let editMode=false;
+let overrides={};
+try{ overrides = JSON.parse(localStorage.getItem(EDIT_KEY)||'{}') || {}; }catch(e){ overrides={}; }
+
+// Text nodes made directly editable, keyed to the engine's own layout classes.
+const EDIT_SEL = [
+  '.cover h1','.cover .sub','.statement h2','.statement .lead',
+  '.part h2','.part .cnt','.part .kick','.quote blockquote','.quote .qby',
+  '.bullets h2','.bullets .lead','.blist li span','.twocol-wrap h2','.tc-col h3','.tc-col .lead',
+  '.mediaslide h2','.mediaslide .lead','.media figcaption','.gallery-wrap h2',
+  '.chartslide h2','.chartslide .lead','.statsslide h2','.stat .n','.stat .l','.stat .hz',
+  '.bignum .bn','.bignum .bnlab','.bignum .lead','.cards-wrap h2','.card h4','.card p',
+  '.table-wrap h2','.table-wrap td','.timeline-wrap h2','.tl-when','.tl-what h4','.tl-what p',
+  '.compare-wrap h2','.cmp-h','.cmp li span',
+  '.init h2','.aka','.tag','.summary','.why','.kw-head',
+  '.closing h2','.closing .sub','.closing .three .b'
+].join(',');
+
+function persistOverrides(){ try{ localStorage.setItem(EDIT_KEY, JSON.stringify(overrides)); }catch(e){} }
+function captureSlide(i){
+  const inner = slides[i].el.querySelector('.slide-inner');
+  const clone = inner.cloneNode(true);
+  clone.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+  clone.querySelectorAll('[data-edit]').forEach(el=>el.removeAttribute('data-edit'));
+  clone.querySelectorAll('.chip-x,.chip-add').forEach(el=>el.remove());
+  overrides[i] = { html: clone.innerHTML, note: slides[i].note };
+  persistOverrides();
+}
+function applyOverrides(){
+  Object.keys(overrides).forEach(k=>{
+    const i=+k, o=overrides[k]; if(!slides[i]||!o) return;
+    if(o.html!=null) slides[i].el.querySelector('.slide-inner').innerHTML=o.html;
+    if(o.note!=null) slides[i].note=o.note;
+  });
+}
+let slideDirty=false;
+function markDirty(){ if(!editMode) return; slideDirty=true; updateEditBar(); }
+function makeChipControls(kw){
+  if(!kw) return;
+  kw.querySelectorAll('.chip-add').forEach(el=>el.remove());
+  kw.querySelectorAll('.chip .chip-x').forEach(el=>el.remove());
+  kw.querySelectorAll('.chip').forEach(chip=>{
+    const x=document.createElement('span'); x.className='chip-x'; x.title='Remove pill';
+    x.addEventListener('click',e=>{ e.stopPropagation(); chip.remove(); markDirty(); });
+    chip.appendChild(x);
+  });
+  const add=document.createElement('span'); add.className='chip chip-add'; add.textContent='+ add';
+  add.addEventListener('click',e=>{
+    e.stopPropagation();
+    const chip=document.createElement('span'); chip.className='chip'; chip.textContent='New item';
+    kw.insertBefore(chip,add); enableChip(chip); markDirty();
+    chip.setAttribute('contenteditable','true'); chip.focus(); document.getSelection().selectAllChildren(chip);
+  });
+  kw.appendChild(add);
+}
+function enableChip(chip){
+  chip.setAttribute('contenteditable','true');
+  const x=document.createElement('span'); x.className='chip-x'; x.title='Remove pill';
+  x.addEventListener('click',e=>{ e.stopPropagation(); chip.remove(); markDirty(); });
+  chip.appendChild(x);
+}
+function enterEditOnSlide(i){
+  const el=slides[i].el;
+  el.querySelectorAll(EDIT_SEL).forEach(node=>{
+    node.setAttribute('data-edit',''); node.setAttribute('contenteditable','true'); node.setAttribute('spellcheck','false');
+  });
+  el.querySelectorAll('.kw').forEach(makeChipControls);
+  notesBody.setAttribute('contenteditable','true'); notesBody.setAttribute('data-edit','');
+}
+function leaveEditOnSlide(i){
+  const el=slides[i].el;
+  el.querySelectorAll('[contenteditable]').forEach(n=>n.removeAttribute('contenteditable'));
+  el.querySelectorAll('[data-edit]').forEach(n=>n.removeAttribute('data-edit'));
+  el.querySelectorAll('.chip-add').forEach(n=>n.remove());
+  el.querySelectorAll('.chip .chip-x').forEach(n=>n.remove());
+  notesBody.removeAttribute('contenteditable'); notesBody.removeAttribute('data-edit');
+}
+const editBar=document.getElementById('editBar');
+const ebSave=document.getElementById('ebSave');
+const ebStatus=document.getElementById('ebStatus');
+function updateEditBar(){
+  if(!editMode) return;
+  ebSave.disabled=!slideDirty;
+  ebStatus.textContent = slideDirty ? 'Unsaved changes' : (overrides[cur]?'Saved (edited)':'No changes');
+  ebStatus.className = 'eb-status'+(slideDirty?' eb-dirty':'');
+}
+function saveCurrent(){ captureSlide(cur); slideDirty=false; updateEditBar(); }
+function refreshEditUIForSlide(){
+  if(!editMode) return;
+  slides.forEach((s,i)=>leaveEditOnSlide(i));
+  enterEditOnSlide(cur); slideDirty=false; updateEditBar();
+}
+function setEdit(on){
+  editMode=on;
+  document.body.classList.toggle('editing',on);
+  if(on){ notesPanel.classList.add('show'); enterEditOnSlide(cur); slideDirty=false; updateEditBar(); }
+  else{ slides.forEach((s,i)=>leaveEditOnSlide(i)); renderNotes(); }
+}
+document.getElementById('slides').addEventListener('input',e=>{ if(editMode) markDirty(); });
+notesBody.addEventListener('input',e=>{ if(editMode){ slides[cur].note=notesBody.textContent; markDirty(); } });
+if(ebSave) ebSave.addEventListener('click',e=>{e.stopPropagation();saveCurrent();});
+const ebExportBtn=document.getElementById('ebExport');
+if(ebExportBtn) ebExportBtn.addEventListener('click',e=>{e.stopPropagation();exportDeck();});
+const ebResetBtn=document.getElementById('ebReset');
+if(ebResetBtn) ebResetBtn.addEventListener('click',e=>{
+  e.stopPropagation();
+  if(!confirm('Discard ALL saved edits and reload the original deck?')) return;
+  overrides={}; persistOverrides(); location.reload();
+});
+function exportDeck(){
+  if(slideDirty) saveCurrent();
+  const doc=document.documentElement.cloneNode(true);
+  const docHead=doc.querySelector('head'), docBody=doc.querySelector('body');
+  const slidesHost=doc.querySelector('#slides'); if(slidesHost) slidesHost.innerHTML='';
+  doc.querySelectorAll('.dots').forEach(d=>d.innerHTML='');
+  if(docBody) docBody.classList.remove('editing');
+  doc.querySelectorAll('[contenteditable]').forEach(n=>n.removeAttribute('contenteditable'));
+  doc.querySelectorAll('[data-edit]').forEach(n=>n.removeAttribute('data-edit'));
+  doc.querySelectorAll('.chip-x,.chip-add').forEach(n=>n.remove());
+  let inject=doc.querySelector('#pfBakedOverrides');
+  if(!inject){ inject=document.createElement('script'); inject.id='pfBakedOverrides'; if(docHead) docHead.insertBefore(inject, docHead.firstChild); }
+  inject.textContent='window.__PF_BAKED_OVERRIDES='+JSON.stringify(overrides)+';';
+  const html='<!DOCTYPE html>\n'+doc.outerHTML;
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ProFinda-Deck.html';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+if(window.__PF_BAKED_OVERRIDES){
+  try{ const baked=window.__PF_BAKED_OVERRIDES; if(!Object.keys(overrides).length){ overrides=baked; persistOverrides(); } }catch(e){}
+}
+applyOverrides();
+window.addEventListener('keydown',e=>{
+  const typing = e.target && (e.target.isContentEditable || /^(INPUT|TEXTAREA)$/.test(e.target.tagName));
+  if(typing){ if(e.key==='Escape'){ e.target.blur(); } return; }
+  if(e.key==='e'||e.key==='E'){ e.preventDefault(); setEdit(!editMode); }
+});
+"""
 
 # The HTML shell (CSS design system + JS engine). __DATA__ is the slide payload.
 TEMPLATE = r"""
@@ -447,6 +643,7 @@ TEMPLATE = r"""
 <title>__TITLE__</title>
 <style>
 /*__FONTS__*/
+/*__EDIT_CSS__*/
 :root{
   --navy:#131E2D; --navy2:#203142; --navy3:#0C1622; --navy-soft:#1B2A3B;
   --teal:#0EAD9A; --teal-dark:#0A8377; --lime:#8CC63F; --lime-dark:#6fa02f;
@@ -775,12 +972,13 @@ h1,h2,h3,h4{line-height:1.06;font-weight:900;letter-spacing:-.02em}
   <div class="na" id="prevBtn" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
   <div class="na" id="nextBtn" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>
 </div>
-<div class="hint" id="hint"><span class="key">&#8592;</span><span class="key">&#8594;</span> arrows or click &#183; <span class="key">F</span> fullscreen &#183; <span class="key">N</span> speaker notes</div>
+<div class="hint" id="hint"><span class="key">&#8592;</span><span class="key">&#8594;</span> arrows or click &#183; <span class="key">F</span> fullscreen &#183; <span class="key">N</span> speaker notes<!--__EDIT_HINT__--></div>
 
 <div id="notesPanel" aria-live="polite">
   <div class="np-head">Speaker notes</div>
   <div class="np-body" id="notesBody"></div>
 </div>
+<!--__EDIT_BAR__-->
 
 <script>
 const DATA = __DATA__;
@@ -828,10 +1026,23 @@ function go(i){
   document.getElementById('secLabel').textContent=slides[cur].section;
   document.getElementById('topbar').classList.toggle('logo-hidden', !!incoming.querySelector('.cover-logo'));
   // per-slide Horizon theme: swap the whole accent palette; every accent surface eases over.
-  const hz=slides[cur].horizon||'h1';
+  applyTheme(slides[cur].horizon||'h1');
+  renderNotes();
+  if(typeof editMode!=='undefined' && editMode){ notesPanel.classList.add('show'); refreshEditUIForSlide(); }
+}
+
+/* ---------- Horizon theming ---------- */
+// Star-cloud palette targets the background eases toward, matched to the CSS accents.
+const THEME_STARS = {
+  'h1':{ near:[140,198,63], far:[14,173,154], link:[150,200,220] },   // teal -> lime
+  'h2':{ near:[246,196,69], far:[232,163,23], link:[224,196,120] },   // amber / gold
+  'h3':{ near:[249,115,22], far:[226,59,46],  link:[236,150,110] },   // orange -> red
+};
+window.__starTargetTheme = THEME_STARS['h1'];
+function applyTheme(hz){
   document.body.classList.toggle('h2', hz==='h2');
   document.body.classList.toggle('h3', hz==='h3');
-  renderNotes();
+  window.__starTargetTheme = THEME_STARS[hz] || THEME_STARS['h1'];
 }
 
 /* ---------- Speaker notes ---------- */
@@ -877,6 +1088,7 @@ window.addEventListener('keydown',e=>{
 });
 let tx=0; window.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
 window.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50){dx<0?next():prev();}},{passive:true});
+/*__EDIT_JS__*/
 setTimeout(()=>document.getElementById('hint').classList.add('fade'),4200);
 go(0);
 
@@ -890,6 +1102,9 @@ go(0);
   const N=200, CELL=2200, HALF=CELL/2, LINK=360, LINK2=LINK*LINK, DRAW=1700;
   const stars=[]; for(let i=0;i<N;i++){ stars.push({x:Math.random()*CELL,y:Math.random()*CELL,z:Math.random()*CELL,r:0.7+Math.random()*1.9,tw:Math.random()*Math.PI*2}); }
   const F=820; const cam={x:0,y:0,z:0,yaw:0,pitch:0,roll:0}; const tgt={x:0,y:0,z:0,yaw:0,pitch:0,roll:0}; let t=0;
+  // live (eased) star palette; eases toward window.__starTargetTheme each frame.
+  const H1={near:[140,198,63],far:[14,173,154],link:[150,200,220]};
+  const col={near:[...H1.near],far:[...H1.far],link:[...H1.link]};
   function wrap(v,camv){ let d=(v-camv)%CELL; if(d<-HALF)d+=CELL; else if(d>=HALF)d-=CELL; return d; }
   const cs={cy:1,sy:0,cp:1,sp:0,cr:1,sr:0};
   function project(dx,dy,dz){
@@ -904,6 +1119,9 @@ go(0);
     cam.yaw+=(tgt.yaw-cam.yaw)*k; cam.pitch+=(tgt.pitch-cam.pitch)*k; cam.roll+=(tgt.roll-cam.roll)*k;
     cam.yaw+=Math.sin(t*0.05)*0.00020; cam.pitch+=Math.cos(t*0.043)*0.00016; cam.z+=0.25;
     cs.cy=Math.cos(cam.yaw);cs.sy=Math.sin(cam.yaw);cs.cp=Math.cos(cam.pitch);cs.sp=Math.sin(cam.pitch);cs.cr=Math.cos(cam.roll);cs.sr=Math.sin(cam.roll);
+    // ease star palette toward the current horizon target
+    const tg=(window.__starTargetTheme)||H1, ck=0.06;
+    for(let c=0;c<3;c++){ col.near[c]+=(tg.near[c]-col.near[c])*ck; col.far[c]+=(tg.far[c]-col.far[c])*ck; col.link[c]+=(tg.link[c]-col.link[c])*ck; }
     ctx.clearRect(0,0,W,H);
     const wx=new Float64Array(N),wy=new Float64Array(N),wz=new Float64Array(N); const proj=new Array(N);
     for(let i=0;i<N;i++){ const dx=wrap(stars[i].x,cam.x),dy=wrap(stars[i].y,cam.y),dz=wrap(stars[i].z,cam.z); wx[i]=dx;wy[i]=dy;wz[i]=dz; proj[i]=project(dx,dy,dz); }
@@ -912,13 +1130,16 @@ go(0);
       for(let j=i+1;j<N;j++){ const b=proj[j]; if(!b||b.z>DRAW) continue;
         const ddx=wx[i]-wx[j],ddy=wy[i]-wy[j],ddz=wz[i]-wz[j]; const d2=ddx*ddx+ddy*ddy+ddz*ddz; if(d2>LINK2) continue;
         const zAvg=(a.z+b.z)/2; const al=Math.max(0,Math.min(.22,(1-d2/LINK2)*(1-zAvg/DRAW)*.22)); if(al<=0.012) continue;
-        ctx.strokeStyle='rgba(150,200,220,'+al.toFixed(3)+')'; ctx.beginPath(); ctx.moveTo(a.px,a.py); ctx.lineTo(b.px,b.py); ctx.stroke();
+        ctx.strokeStyle='rgba('+(col.link[0]|0)+','+(col.link[1]|0)+','+(col.link[2]|0)+','+al.toFixed(3)+')'; ctx.beginPath(); ctx.moveTo(a.px,a.py); ctx.lineTo(b.px,b.py); ctx.stroke();
       } }
     for(let i=0;i<N;i++){ const pr=proj[i]; if(!pr||pr.z>DRAW) continue;
       if(pr.px<-40||pr.px>W+40||pr.py<-40||pr.py>H+40) continue; const s=stars[i];
       const rad=Math.max(.5,s.r*pr.scale*140); const tw=0.6+0.4*Math.sin(t*1.2+s.tw); const al=Math.max(0,Math.min(.95,(1-pr.z/DRAW)))*tw; if(al<=0.02) continue;
-      const near=Math.max(0,Math.min(1,1-pr.z/(DRAW*0.8))); const g=Math.round(173+(198-173)*(1-near));
-      ctx.fillStyle='rgba('+Math.round(14+(140-14)*(1-near))+','+g+','+Math.round(154+(63-154)*(1-near))+','+al.toFixed(3)+')';
+      const near=Math.max(0,Math.min(1,1-pr.z/(DRAW*0.8)));
+      const cr=Math.round(col.far[0]+(col.near[0]-col.far[0])*near);
+      const cg=Math.round(col.far[1]+(col.near[1]-col.far[1])*near);
+      const cb=Math.round(col.far[2]+(col.near[2]-col.far[2])*near);
+      ctx.fillStyle='rgba('+cr+','+cg+','+cb+','+al.toFixed(3)+')';
       ctx.beginPath(); ctx.arc(pr.px,pr.py,Math.min(rad,5),0,6.283); ctx.fill();
     }
     requestAnimationFrame(frame);
