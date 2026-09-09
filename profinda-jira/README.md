@@ -1,5 +1,14 @@
 # profinda-jira — Developer Setup
 
+## Description templates
+
+Issue description templates live in [`templates/`](templates/) — Markdown is the
+source of truth; [`templates/adf/`](templates/adf/) holds the generated Jira ADF.
+See [`templates/README.md`](templates/README.md) for the sync rule (edit MD,
+regenerate ADF, commit both; CI enforces it).
+
+## MCP setup
+
 This skill requires the `mcp-atlassian` MCP server configured in your AI client.
 
 ```bash
