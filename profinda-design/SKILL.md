@@ -33,7 +33,7 @@ Copy the full `:root` + `.theme-light` + `.theme-dark` token blocks from REFEREN
 
 ## Non-negotiables
 
-- **Type:** Mulish (fallback Inter/system). Headings `font-weight:900; letter-spacing:-.02em; line-height:1.06`. Fluid sizes via `clamp()`.
+- **Type:** Mulish (fallback Inter/system). Headings `font-weight:900; letter-spacing:-.02em; line-height:1.06`. Fluid sizes via `clamp()`. For self-contained files, embed Mulish as a base64 `@font-face` (it's SIL OFL) — `assets/profinda-background.html` does this; the `profinda-deck` skill bundles the `.woff2` under `assets/fonts/`. A bare `font-family` alone falls back to Inter/system where Mulish isn't installed.
 - **Accents on text/lines/dots/borders/glows only** — never flood large fills with teal/green/blue.
 - **Emphasis** = brand gradient on key words (`background-clip:text`), not a colour swap.
 - **Icons:** stroked line set, 24×24, `stroke-width:1.9`, round caps/joins, `fill:none`, `stroke:currentColor`. Don't mix styles.

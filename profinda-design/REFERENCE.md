@@ -140,7 +140,7 @@ Copy this as the canonical token set. Theme-specific roles are split into Light 
 
 ## Typography
 
-- **Family:** `'Mulish','Inter',system-ui,-apple-system,sans-serif`. Mulish is the ProFinda face; Inter/system are fallbacks. For self-contained deliverables, either embed Mulish or accept the fallback — don't pull external font CDNs into files that must stand alone.
+- **Family:** `'Mulish','Inter',system-ui,-apple-system,sans-serif`. Mulish is the ProFinda face; Inter/system are fallbacks. Mulish is **SIL OFL** licensed, so for self-contained deliverables **embed it as a base64 `@font-face`** rather than relying on it being installed or pulling a font CDN — a declared `font-family` alone silently falls back to Inter/system on any machine without Mulish. Mulish ships as a variable font, so one `.woff2` per subset (latin, latin-ext) covers weights 500–900. The `profinda-deck` skill bundles these under `assets/fonts/` (+ `OFL.txt`) and injects the `@font-face`; `profinda-design/assets/profinda-background.html` inlines the same. When redistributing the font, ship the OFL license with it.
 - **Headings:** `font-weight:900; line-height:1.06; letter-spacing:-.02em`. Big and tight. Use `clamp()` for fluid sizing (hero e.g. `clamp(44px,7.4vw,116px)`).
 - **Body:** `--ink`/`--muted`, `font-weight:500`, `line-height:1.4–1.55`, measure ~`60ch`.
 - **Eyebrow / kicker:** uppercase, `font-weight:800`, `letter-spacing:.22em`, colored `--accent`, usually preceded by a small dot or short gradient line.

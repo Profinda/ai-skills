@@ -75,13 +75,14 @@ Every slide is a dict: `{"layout": <name>, ...fields}`. On **any** slide:
 - `assets/build_deck.py` — the engine + `build()`. Import it, or run with `--demo`.
 - `assets/demo_content.py` — the layout showcase (every layout + H2/H3).
 - `assets/pf_logo.txt` — base64 logo, embedded into every deck.
+- `assets/fonts/` — **Mulish** (the brand font) as base64 `.woff2` (latin + latin-ext), embedded into every deck via `@font-face` so it renders in the real brand font on any machine, with no font CDN. It's a variable font, so one file per subset covers weights 500–900. `OFL.txt` is the license (Mulish is SIL OFL — redistribution requires shipping it). To restyle the font, replace these files or edit `_font_face()`.
 - `examples/roadmap/` — a real, hand-authored deck kept as a reference build (origin of the 3D flythrough + Horizon theming). New decks should use the engine, not copy this.
 
 Env: `PF_DECK_OUT` (output dir), `PF_DECK_LOGO` (alternate logo).
 
 ## Guardrails
 
-- Self-contained always: no external fonts/scripts/images. Local media is embedded; verify no `src=`/`href=` `http(s)` refs remain.
+- Self-contained always: no external fonts/scripts/images. The brand font (Mulish) and local media are embedded as base64; verify no `src=`/`href=`/`@import` `http(s)` refs (including `fonts.googleapis.com`) remain.
 - Write **content**; don't hand-author slide HTML. If a layout is missing, add a renderer to `LAYOUTS` in `build_deck.py` rather than injecting raw markup.
 - Match `profinda-design`: brand teal/green, Mulish, glass, glow + star cloud, staggered entrances. Horizon amber/orange/red is phasing only.
 - Honour `prefers-reduced-motion` (the engine already falls back to static/fade).

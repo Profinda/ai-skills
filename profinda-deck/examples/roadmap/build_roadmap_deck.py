@@ -12,6 +12,27 @@ HERE = pathlib.Path(__file__).resolve().parent
 # Shared logo lives in the skill's assets/; output dir overridable via PF_DECK_OUT.
 LOGO = pathlib.Path(os.environ.get("PF_DECK_LOGO", HERE.parent.parent / "assets" / "pf_logo.txt")).read_text().strip()
 OUT_DIR = pathlib.Path(os.environ.get("PF_DECK_OUT", HERE))
+FONT_DIR = HERE.parent.parent / "assets" / "fonts"
+
+def _font_face():
+    import base64
+    subsets = {
+        "mulish-latin.woff2":
+            "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,"
+            "U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD",
+        "mulish-latin-ext.woff2":
+            "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,"
+            "U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF",
+    }
+    faces = []
+    for fn, ur in subsets.items():
+        p = FONT_DIR / fn
+        if not p.exists():
+            continue
+        b64 = base64.b64encode(p.read_bytes()).decode()
+        faces.append("@font-face{font-family:'Mulish';font-style:normal;font-weight:500 900;font-display:swap;"
+                     f"src:url(data:font/woff2;base64,{b64}) format('woff2');unicode-range:{ur};}}")
+    return "\n".join(faces)
 
 # 14 initiatives. keywords = decomposition chips (legacy names / head-of-product alt names / sub-themes).
 # aka = head-of-product alternative title surfaced as subtitle. clients = list of company keys.
@@ -173,6 +194,7 @@ HTML = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ProFinda \u00b7 Product Roadmap</title>
 <style>
+/*__FONTS__*/
 :root{
   --navy:#131E2D; --navy2:#203142; --navy3:#0C1622; --navy-soft:#1B2A3B;
   --teal:#0EAD9A; --teal-dark:#0A8377; --lime:#8CC63F; --lime-dark:#6fa02f;
@@ -992,7 +1014,7 @@ _ESC = {
 for a,b in _ESC.items():
     HTML = HTML.replace(a,b)
 
-HTML = HTML.replace("__DATA__", data_json).replace("__LOGO__", LOGO)
+HTML = HTML.replace("/*__FONTS__*/", _font_face()).replace("__DATA__", data_json).replace("__LOGO__", LOGO)
 out = OUT_DIR / "ProFinda-Product-Roadmap-3D.html"
 out.write_text(HTML, encoding="utf-8")
 print("Wrote", out, len(HTML), "bytes")
