@@ -41,6 +41,8 @@ Required fields differ from Task/Bug — check dynamically with `jira_get_create
 
 ## Field option reference
 
+All option IDs below can change as ProFinda reconfigures fields. If a name looks unfamiliar, or a create/transition call rejects an ID, re-verify with `jira_get_field_options` (or `jira_get_project_versions` for Fix Versions) before trusting the table.
+
 ### Pod (`customfield_10988`)
 | Name | ID |
 |---|---|
@@ -61,7 +63,7 @@ Required fields differ from Task/Bug — check dynamically with `jira_get_create
 | Skills | `13739` |
 | Squirtle Squad | `13938` |
 
-For Management-project issues, use `Firefighting` (`13600`) or `Placeholder Pod` (`13740`). This list changes as squads are renamed/added — re-verify with `jira_get_field_options` if a name looks unfamiliar.
+For Management-project issues, use `Firefighting` (`13600`) or `Placeholder Pod` (`13740`).
 
 ### Environment (`customfield_10598`)
 | Name | ID |
@@ -99,7 +101,7 @@ When in doubt, default to `Master` (`10328`).
 | Technical Debt | `11140` |
 
 ### Fix Versions
-Pick the version matching the current quarter; for unplanned/internal work use the current or next quarter. IDs change every quarter — verify with `jira_get_project_versions` rather than trusting a stale list here.
+Pick the version matching the current quarter; for unplanned/internal work use the current or next quarter.
 
 ### Priority
 | Name | ID |
