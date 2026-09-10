@@ -1,6 +1,7 @@
 ---
 name: profinda-code-review
-description: Performs code review in three modes: quick (bugs, security, regressions), full (spec, correctness, naming, tests, linting, JIRA ticket), and fix (propose and apply fixes with re-review). Loads project-specific rules from $REPO/AI_REVIEW.md when present. Use when user invokes /profinda-review, asks for a code review, mentions "review my changes", or uses the words "quick review", "full review", or "review fix".
+description: >-
+  Performs code review in three modes: quick (bugs, security, regressions), full (spec, correctness, naming, tests, linting, JIRA ticket), and fix (propose and apply fixes with re-review). Loads project-specific rules from $REPO/AI_REVIEW.md when present. Use when user invokes /profinda-review, asks for a code review, mentions "review my changes", or uses the words "quick review", "full review", or "review fix".
 ---
 
 # Code Review
