@@ -41,6 +41,8 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | Skill | Description |
 |---|---|
 | `profinda-adr` | Create and maintain Architecture Decision Records |
+| `profinda-design` | Build in ProFinda's design language (product UI, prototypes, decks, marketing, docs): brand palette, Light/Dark themes, Horizon accents, Mulish type, glass surfaces, line icons, constellation background, components, motion. Ships a drop-in dark background asset. |
+| `profinda-deck` | Build ProFinda presentation decks from content, not markup: a content-driven engine renders a list of slide dicts into one self-contained HTML deck — 17 layouts (title/section/statement/quote/bullets/two-col/media/gallery/charts/stats/big-number/cards/table/timeline/compare/feature/closing), inline SVG charts, embedded media, 3D flythrough, speaker notes, and per-slide Horizon theming. Builds on `profinda-design`. |
 | `profinda-jira` | Jira workflow: Epic = living PRD, Story/Task, optional sub-task steps, dependencies as links, dual sign-off. Includes description templates (MD + ADF). Uses `mcp-atlassian` MCP. |
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
@@ -69,7 +71,29 @@ Load the `profinda-write-a-skill` skill first. Do not write skills without it.
 
 Then decide tier (see **Skill Tiers** above) before writing.
 
-## Using in a Repo
+## Install (recommended)
+
+Use the interactive installer instead of the manual steps below. It handles both global (personal) and repo-local installs, and lets you add or remove skills:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh | sh
+```
+
+What it does:
+
+1. Clones or updates `~/.config/ai-skills` from this repo's `main`.
+2. Lists every `profinda-*` skill and marks each as GLOBAL, LOCAL (to the repo you ran it from), or not installed.
+3. For each skill, asks: **g**lobal, **l**ocal, **r**emove, or **s**kip.
+   - **Global** symlinks the skill into `~/.config/opencode/skills/` (available in every repo). A `git pull` of `~/.config/ai-skills` refreshes it.
+   - **Local** wires this repo's `.claude/skills/shared` submodule, updates it to the latest `main`, symlinks the chosen skills into `.claude/skills/`, and gitignores those symlinks.
+   - **Remove** deletes the symlink (never the skill content) and cleans the `.gitignore` line for local installs.
+4. Optionally adds a weekly background auto-update for the global clone to `~/.zshrc` (brew/rvm style), so global skills stay fresh without manual pulls.
+
+Re-run it any time to change your selection. It is idempotent and only touches symlinks, the submodule pointer, `.gitignore`, and (if you opt in) one block in `~/.zshrc`.
+
+## Manual setup (fallback / CI)
+
+Use these steps only if you can't run the installer (e.g. non-interactive CI).
 
 ### Initial setup
 
