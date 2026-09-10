@@ -43,10 +43,10 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-adr` | Create and maintain Architecture Decision Records |
 | `profinda-design` | Build in ProFinda's design language (product UI, prototypes, decks, marketing, docs): brand palette, Light/Dark themes, Horizon accents, Mulish type, glass surfaces, line icons, constellation background, components, motion. Ships a drop-in dark background asset. |
 | `profinda-deck` | Build ProFinda presentation decks from content, not markup: a content-driven engine renders a list of slide dicts into one self-contained HTML deck — 17 layouts (title/section/statement/quote/bullets/two-col/media/gallery/charts/stats/big-number/cards/table/timeline/compare/feature/closing), inline SVG charts, embedded media, 3D flythrough, speaker notes, and per-slide Horizon theming. Builds on `profinda-design`. |
-| `profinda-jira` | Jira workflow: PRD in Epic, Stories, sub-tasks as progress tracker, HANDOFF comments. Uses `mcp-atlassian` MCP. |
+| `profinda-jira` | Jira workflow: Epic = living PRD, Story/Task, optional sub-task steps, dependencies as links, dual sign-off. Includes description templates (MD + ADF). Uses `mcp-atlassian` MCP. |
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
-| `profinda-prd` | Write a Product Requirements Document from conversation context |
+| `profinda-prd` | **Deprecated** — the PRD now lives in the Epic. Use `profinda-jira`. |
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 

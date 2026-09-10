@@ -1,0 +1,21 @@
+name: Templates ADF sync
+
+on:
+  pull_request:
+    paths:
+      - "profinda-jira/templates/**"
+  push:
+    branches: [main]
+    paths:
+      - "profinda-jira/templates/**"
+
+jobs:
+  check-adf-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check Markdown ↔ ADF sync
+        run: python3 profinda-jira/templates/adf/generate.py --check
