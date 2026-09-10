@@ -76,7 +76,7 @@ Then decide tier (see **Skill Tiers** above) before writing.
 Use the interactive installer instead of the manual steps below. It handles both global (personal) and repo-local installs, and lets you add or remove skills:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh -o /tmp/ai-skills-install.sh && sh /tmp/ai-skills-install.sh
 ```
 
 What it does:
