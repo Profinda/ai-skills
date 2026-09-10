@@ -1,8 +1,9 @@
 #!/usr/bin/env sh
 # ProFinda ai-skills installer.
 #
-# One-liner:
-#   curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh | sh
+# Install (download then run — this installer is interactive, so do NOT pipe it
+# straight into `sh`; `curl | sh` gives the script no keyboard and it can't prompt):
+#   curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh -o /tmp/ai-skills-install.sh && sh /tmp/ai-skills-install.sh
 #
 # What it does:
 #   1. Clones or updates ~/.config/ai-skills from Profinda/ai-skills (main).
@@ -56,15 +57,19 @@ set_field() { # $1 = list  $2 = index  $3 = new value -> echoes updated list
   printf '%s' "${_out# }"
 }
 
-# ---------- stdin handling for curl | sh ------------------------------------
-# When piped (curl | sh) stdin is the script, not the keyboard. Reopen the tty
-# so the prompts actually work. If there's no tty we bail with instructions.
+# ---------- stdin handling -------------------------------------------------
+# This installer is interactive: it reads your choices from the keyboard.
+# If stdin isn't a terminal (e.g. you ran `curl ... | sh`, which feeds the
+# downloaded script to sh as stdin, leaving no keyboard) try to grab the
+# controlling terminal. If that fails, stop with clear instructions instead
+# of hanging silently at a prompt you can't see.
 if [ ! -t 0 ]; then
-  if [ -e /dev/tty ]; then
-    exec < /dev/tty
+  if [ -e /dev/tty ] && exec < /dev/tty; then
+    :
   else
-    err "No interactive terminal available. Download and run the script directly:"
-    err "  curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/$BRANCH/install.sh -o install.sh && sh install.sh"
+    err "This installer is interactive and has no terminal to read from."
+    err "Don't pipe it into sh. Download it, then run it:"
+    err "  curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/$BRANCH/install.sh -o /tmp/ai-skills-install.sh && sh /tmp/ai-skills-install.sh"
     exit 1
   fi
 fi
@@ -162,21 +167,28 @@ global_remove() { # $1 = skill
 
 # ---------- local (repo) add / remove ---------------------------------------
 ensure_submodule() {
-  # Ensure the current repo has .claude/skills/shared pointing at ai-skills,
-  # then update it to the latest main.
-  if [ ! -e "$REPO_ROOT/.claude/skills/shared/.git" ] && [ ! -f "$REPO_ROOT/.claude/skills/shared/.git" ]; then
-    if git -C "$REPO_ROOT" config --file .gitmodules --get-regexp path >/dev/null 2>&1 && \
-       git -C "$REPO_ROOT" config --file .gitmodules --get submodule..claude/skills/shared.url >/dev/null 2>&1; then
-      info "Initialising existing .claude/skills/shared submodule"
-      git -C "$REPO_ROOT" submodule update --init .claude/skills/shared
-    else
-      info "Adding ai-skills as a submodule at .claude/skills/shared"
-      git -C "$REPO_ROOT" submodule add "$REPO_URL" .claude/skills/shared 2>/dev/null \
-        || git -C "$REPO_ROOT" submodule add "$REPO_URL_HTTPS" .claude/skills/shared
-    fi
+  # Ensure the current repo has .claude/skills/shared, then update it to the
+  # latest of $BRANCH. If it already exists we still bump it to latest (that is
+  # the whole point: stop repos drifting behind the shared skills). The bump
+  # shows up as a submodule-pointer change in `git status` for you to commit.
+  if [ -e "$REPO_ROOT/.claude/skills/shared/.git" ]; then
+    info ".claude/skills/shared submodule present — updating to latest $BRANCH"
+  elif git -C "$REPO_ROOT" config --file .gitmodules --get submodule..claude/skills/shared.url >/dev/null 2>&1; then
+    info "Initialising existing .claude/skills/shared submodule"
+    git -C "$REPO_ROOT" submodule update --init .claude/skills/shared >/dev/null 2>&1 || true
+  else
+    info "Adding ai-skills as a submodule at .claude/skills/shared"
+    git -C "$REPO_ROOT" submodule add "$REPO_URL" .claude/skills/shared 2>/dev/null \
+      || git -C "$REPO_ROOT" submodule add "$REPO_URL_HTTPS" .claude/skills/shared \
+      || { err "Could not add the ai-skills submodule."; return 1; }
   fi
-  info "Updating .claude/skills/shared to latest $BRANCH"
-  git -C "$REPO_ROOT" submodule update --remote .claude/skills/shared >/dev/null 2>&1 || true
+  # Pull the submodule to the tip of $BRANCH from its remote.
+  if git -C "$REPO_ROOT" submodule update --remote --init .claude/skills/shared >/dev/null 2>&1; then
+    _sub_head="$(git -C "$REPO_ROOT/.claude/skills/shared" rev-parse --short HEAD 2>/dev/null)"
+    info "Submodule now at $_sub_head. If the pointer moved, commit it: git add .claude/skills/shared"
+  else
+    warn "Could not update the submodule to latest; using whatever commit is checked out."
+  fi
 }
 
 gitignore_add() { # $1 = path relative to repo root
@@ -255,10 +267,14 @@ main() {
   say "This installer is interactive. It shows every skill and its current location,"
   say "then asks you, one skill at a time, what you want its state to be."
   say ""
-  say "  Location column shows where each skill is now:"
-  say "    ${GREEN}G${RESET}=global   ${BLUE}L${RESET}=local (this repo)   ${DIM}-${RESET}=not installed"
+  say "  The 'now' column shows where each skill is currently active:"
+  say "    ${GREEN}G${RESET}=global   ${BLUE}L${RESET}=local (this repo)   ${DIM}-${RESET}=not active"
   say "  For each skill, set the desired state (press Enter to keep it unchanged):"
-  say "    ${GREEN}g${RESET}=global   ${BLUE}l${RESET}=local   ${RED}-${RESET}=remove / not installed"
+  say "    ${GREEN}g${RESET}=global   ${BLUE}l${RESET}=local   ${RED}-${RESET}=remove / not active"
+  say ""
+  say "  ${DIM}Note: a shared skill shows '-' until you activate it. Choosing 'l' links it${RESET}"
+  say "  ${DIM}into this repo's .claude/skills/ (using the .claude/skills/shared submodule,${RESET}"
+  say "  ${DIM}which is added/updated automatically); 'g' links it into your global dir.${RESET}"
   say ""
   say "  global skills dir : $GLOBAL_SKILLS_DIR"
   if [ -n "$REPO_ROOT" ]; then
