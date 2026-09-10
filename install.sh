@@ -112,6 +112,36 @@ list_available() { # prints skill names, one per line
   done
 }
 
+# True if $1 is a skill that exists in the ai-skills clone (i.e. managed here).
+is_managed_skill() {
+  [ -d "$CLONE_DIR/$1" ]
+}
+
+# List "orphan" skills the user has that are NOT from ai-skills, one per line,
+# as "<G|L> <name>". These are surfaced read-only so the user knows they exist;
+# the installer does not manage them. Skips the 'shared' submodule dir.
+list_orphans() {
+  # global orphans
+  if [ -d "$GLOBAL_SKILLS_DIR" ]; then
+    for d in "$GLOBAL_SKILLS_DIR"/*/; do
+      [ -e "$d" ] || continue
+      _name="$(basename "$d")"
+      is_managed_skill "$_name" && continue
+      printf 'G %s\n' "$_name"
+    done
+  fi
+  # local orphans (only when inside a repo)
+  if [ -n "${REPO_SKILLS_DIR:-}" ] && [ -d "$REPO_SKILLS_DIR" ]; then
+    for d in "$REPO_SKILLS_DIR"/*/; do
+      [ -e "$d" ] || continue
+      _name="$(basename "$d")"
+      [ "$_name" = "shared" ] && continue
+      is_managed_skill "$_name" && continue
+      printf 'L %s\n' "$_name"
+    done
+  fi
+}
+
 # ---------- status helpers ---------------------------------------------------
 is_global_installed() { # $1 = skill
   [ -L "$GLOBAL_SKILLS_DIR/$1" ] || [ -e "$GLOBAL_SKILLS_DIR/$1" ]
@@ -166,13 +196,33 @@ global_remove() { # $1 = skill
 }
 
 # ---------- local (repo) add / remove ---------------------------------------
+# True if the repo has the shared submodule (checked out or at least declared).
+has_shared_submodule() {
+  [ -e "$REPO_ROOT/.claude/skills/shared/.git" ] && return 0
+  git -C "$REPO_ROOT" config --file .gitmodules \
+    --get submodule..claude/skills/shared.url >/dev/null 2>&1
+}
+
+# Update an already-present shared submodule to the tip of $BRANCH. Called up
+# front so the table reflects the latest shared skills. Does NOT add a submodule
+# to a repo that doesn't have one (that only happens when you pick a local install).
+update_submodule_if_present() {
+  [ -n "$REPO_ROOT" ] || return 0
+  has_shared_submodule || return 0
+  info "Updating this repo's .claude/skills/shared submodule to latest $BRANCH ..."
+  git -C "$REPO_ROOT" submodule update --init --remote .claude/skills/shared >/dev/null 2>&1 || {
+    warn "Could not update the submodule; using whatever commit is checked out."
+    return 0
+  }
+  _sub_head="$(git -C "$REPO_ROOT/.claude/skills/shared" rev-parse --short HEAD 2>/dev/null)"
+  info "Submodule now at $_sub_head. If the pointer moved, commit it: git add .claude/skills/shared"
+}
+
 ensure_submodule() {
-  # Ensure the current repo has .claude/skills/shared, then update it to the
-  # latest of $BRANCH. If it already exists we still bump it to latest (that is
-  # the whole point: stop repos drifting behind the shared skills). The bump
-  # shows up as a submodule-pointer change in `git status` for you to commit.
+  # Called during apply when a local install is chosen. Adds the submodule if the
+  # repo doesn't have one yet, then makes sure it's at the latest $BRANCH.
   if [ -e "$REPO_ROOT/.claude/skills/shared/.git" ]; then
-    info ".claude/skills/shared submodule present — updating to latest $BRANCH"
+    :
   elif git -C "$REPO_ROOT" config --file .gitmodules --get submodule..claude/skills/shared.url >/dev/null 2>&1; then
     info "Initialising existing .claude/skills/shared submodule"
     git -C "$REPO_ROOT" submodule update --init .claude/skills/shared >/dev/null 2>&1 || true
@@ -182,13 +232,7 @@ ensure_submodule() {
       || git -C "$REPO_ROOT" submodule add "$REPO_URL_HTTPS" .claude/skills/shared \
       || { err "Could not add the ai-skills submodule."; return 1; }
   fi
-  # Pull the submodule to the tip of $BRANCH from its remote.
-  if git -C "$REPO_ROOT" submodule update --remote --init .claude/skills/shared >/dev/null 2>&1; then
-    _sub_head="$(git -C "$REPO_ROOT/.claude/skills/shared" rev-parse --short HEAD 2>/dev/null)"
-    info "Submodule now at $_sub_head. If the pointer moved, commit it: git add .claude/skills/shared"
-  else
-    warn "Could not update the submodule to latest; using whatever commit is checked out."
-  fi
+  git -C "$REPO_ROOT" submodule update --remote --init .claude/skills/shared >/dev/null 2>&1 || true
 }
 
 gitignore_add() { # $1 = path relative to repo root
@@ -261,6 +305,10 @@ main() {
     esac
   fi
 
+  # Bring the repo's shared submodule up to date up front, so the table below
+  # reflects the latest shared skills before we start choosing anything.
+  update_submodule_if_present
+
   # Greeting.
   say ""
   say "${BOLD}ProFinda ai-skills installer${RESET}"
@@ -283,6 +331,19 @@ main() {
     say "  current repo      : ${DIM}none — run from inside a repo to enable local (l) installs${RESET}"
   fi
   say ""
+
+  # FYI: skills you already have that are NOT from ai-skills (personal/global or
+  # repo-local). Shown read-only above the managed table; not selectable here.
+  _orphans="$(list_orphans)"
+  if [ -n "$_orphans" ]; then
+    say "${BOLD}You also have these skills (not from ai-skills — not managed here):${RESET}"
+    printf '%s\n' "$_orphans" | while IFS=' ' read -r _oloc _oname; do
+      [ -n "$_oname" ] || continue
+      _oc="$(state_color "$_oloc")"
+      printf '     %s%s%s   %s\n' "$_oc" "$_oloc" "$RESET" "$_oname"
+    done
+    say ""
+  fi
 
   # Build ordered skill list: globals first, then locals, then missing.
   _raw="$(list_available)"
