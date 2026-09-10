@@ -8,7 +8,7 @@ progress + dots, fullscreen, and per-slide Horizon accent theming.
 
 QUICK START
 -----------
-Define SLIDES (see the demo at the bottom, or examples/roadmap.py), then:
+Define SLIDES (see assets/demo_content.py, or examples/build_sample.py), then:
 
     python3 build_deck.py                     # writes ./ProFinda-Deck.html
     PF_DECK_OUT=~/Desktop python3 build_deck.py

@@ -90,7 +90,7 @@ Applied exactly like the brand accent (gradient A→B on text/rules/indicators, 
 }
 ```
 
-Guardrails: don't use amber/orange/red decoratively or for status (success/warning/error) — that's a separate concern. They mean "later horizon" and nothing else. The reference build (`ProFinda-Product-Roadmap-3D.html`) swaps the whole accent palette per horizon via `body.h2` / `body.h3`; see the `profinda-deck` skill.
+Guardrails: don't use amber/orange/red decoratively or for status (success/warning/error) — that's a separate concern. They mean "later horizon" and nothing else. The `profinda-deck` engine swaps the whole accent palette per horizon via `body.h2` / `body.h3` (and eases the star-cloud background to match); see that skill.
 
 ## CSS tokens
 
@@ -226,7 +226,7 @@ See `assets/profinda-background.html` in the `profinda-design` skill for a drop-
 
 - **Product / platform UI → Light.** Palette, cards, line icons, one primary action, tight heavy headings. Background system minimal; density and legibility first.
 - **Prototypes → Dark (usually).** Full language incl. background + entrance motion so refinement decisions are made against the real, finished-looking bar. Self-contained where possible. Match the platform theme if the prototype is a platform feature.
-- **Presentations → Dark.** The full experience: glow + constellation, hero glyphs, staggered entrances, brand-gradient key words, stat/pill rows. (The Product Roadmap deck is the reference build.)
+- **Presentations → Dark.** The full experience: glow + constellation, hero glyphs, staggered entrances, brand-gradient key words, stat/pill rows. (Use the `profinda-deck` skill; its `examples/sample.html` is the reference build.)
 - **Marketing → Both.** profinda.com mixes light and dark section-by-section; brand-gradient headline words, cards, generous space throughout.
 - **Documents / exports (CVs, reports) → Light/print.** Restrained. Keep the brand accent gradient, Mulish headings, the line-icon system, and hairline dividers so it still reads as ProFinda.
 
@@ -243,4 +243,4 @@ See `assets/profinda-background.html` in the `profinda-design` skill for a drop-
 
 ## Reference build
 
-`~/Downloads/ProFinda-Product-Roadmap.html` (built by `build_deck.py`) is the canonical self-contained reference for the **dark** theme: palette, glass cards, hero glyphs, constellation background, chips, pills, stat cards, and the entrance/ambient motion. **profinda.com** is the reference for mixing light and dark. For **presentations specifically**, the 3D flythrough deck `ProFinda-Product-Roadmap-3D.html` (built by `build_deck_3d.py`) adds the Horizon accent theming and the 3D slide transitions — see the `profinda-deck` skill.
+The `profinda-deck` skill's `examples/sample.html` (built by `profinda-deck/examples/build_sample.py`) is the canonical self-contained reference for the **dark** theme: palette, glass cards, hero glyphs, constellation/star-cloud background, chips, pills, stat cards, charts, the entrance/ambient motion, the 3D flythrough and per-Horizon accent theming. **profinda.com** is the reference for mixing light and dark.

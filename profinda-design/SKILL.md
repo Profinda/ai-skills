@@ -55,4 +55,4 @@ Drop [assets/profinda-background.html](assets/profinda-background.html) in as th
 
 ## Reference build
 
-`ProFinda-Product-Roadmap.html` (the roadmap deck) is the canonical dark-theme build; profinda.com is the light+dark reference.
+The `profinda-deck` skill's `examples/sample.html` is the canonical dark-theme build; profinda.com is the light+dark reference.

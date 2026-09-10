@@ -88,7 +88,7 @@ Setting `horizon` also eases the **3D star-cloud background** to that horizon's 
 - `assets/demo_content.py` — the layout showcase (every layout + H2/H3).
 - `assets/pf_logo.txt` — base64 logo, embedded into every deck.
 - `assets/fonts/` — **Mulish** (the brand font) as base64 `.woff2` (latin + latin-ext), embedded into every deck via `@font-face` so it renders in the real brand font on any machine, with no font CDN. It's a variable font, so one file per subset covers weights 500–900. `OFL.txt` is the license (Mulish is SIL OFL — redistribution requires shipping it). To restyle the font, replace these files or edit `_font_face()`.
-- `examples/roadmap/` — a real, hand-authored deck kept as a reference build (origin of the 3D flythrough + Horizon theming). New decks should use the engine, not copy this.
+- `examples/sample.html` — a committed showcase deck (all 17 layouts + H1/H2/H3 + Edit mode) for a quick visual reference; rebuild it with `python3 examples/build_sample.py`.
 
 Env: `PF_DECK_OUT` (output dir), `PF_DECK_LOGO` (alternate logo).
 
