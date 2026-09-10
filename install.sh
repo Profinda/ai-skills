@@ -24,7 +24,13 @@ REPO_URL="git@github.com:Profinda/ai-skills.git"
 REPO_URL_HTTPS="https://github.com/Profinda/ai-skills.git"
 BRANCH="main"
 CLONE_DIR="${AI_SKILLS_HOME:-$HOME/.config/ai-skills}"
-GLOBAL_SKILLS_DIR="${OPENCODE_SKILLS_DIR:-$HOME/.config/opencode/skills}"
+# Global skills can target two clients. A skill counts as globally installed if
+# it's present in either dir; new global installs go to the client(s) you pick.
+OPENCODE_SKILLS_DIR="${OPENCODE_SKILLS_DIR:-$HOME/.config/opencode/skills}"
+CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
+# GLOBAL_TARGETS is set at runtime from the up-front prompt: "opencode", "claude",
+# or "opencode claude" (both). Adds honour it; removes always clear both.
+GLOBAL_TARGETS="opencode"
 AUTO_UPDATE_MARKER="# ai-skills weekly auto-update"
 
 # ---------- pretty output ----------------------------------------------------
@@ -117,19 +123,24 @@ is_managed_skill() {
   [ -d "$CLONE_DIR/$1" ]
 }
 
+# The global client skill dirs to consider (opencode + Claude).
+global_dirs() { printf '%s\n%s\n' "$OPENCODE_SKILLS_DIR" "$CLAUDE_SKILLS_DIR"; }
+
 # List "orphan" skills the user has that are NOT from ai-skills, one per line,
 # as "<G|L> <name>". These are surfaced read-only so the user knows they exist;
 # the installer does not manage them. Skips the 'shared' submodule dir.
 list_orphans() {
-  # global orphans
-  if [ -d "$GLOBAL_SKILLS_DIR" ]; then
-    for d in "$GLOBAL_SKILLS_DIR"/*/; do
+  # global orphans across both client dirs, de-duplicated by name
+  _seen=""
+  global_dirs | while IFS= read -r _gd; do
+    [ -d "$_gd" ] || continue
+    for d in "$_gd"/*/; do
       [ -e "$d" ] || continue
       _name="$(basename "$d")"
       is_managed_skill "$_name" && continue
       printf 'G %s\n' "$_name"
     done
-  fi
+  done | sort -u
   # local orphans (only when inside a repo)
   if [ -n "${REPO_SKILLS_DIR:-}" ] && [ -d "$REPO_SKILLS_DIR" ]; then
     for d in "$REPO_SKILLS_DIR"/*/; do
@@ -143,8 +154,9 @@ list_orphans() {
 }
 
 # ---------- status helpers ---------------------------------------------------
-is_global_installed() { # $1 = skill
-  [ -L "$GLOBAL_SKILLS_DIR/$1" ] || [ -e "$GLOBAL_SKILLS_DIR/$1" ]
+is_global_installed() { # $1 = skill — true if present in EITHER client dir
+  [ -L "$OPENCODE_SKILLS_DIR/$1" ] || [ -e "$OPENCODE_SKILLS_DIR/$1" ] \
+    || [ -L "$CLAUDE_SKILLS_DIR/$1" ] || [ -e "$CLAUDE_SKILLS_DIR/$1" ]
 }
 is_local_installed() { # $1 = skill ; needs REPO_SKILLS_DIR set
   [ -n "${REPO_SKILLS_DIR:-}" ] && { [ -L "$REPO_SKILLS_DIR/$1" ] || [ -e "$REPO_SKILLS_DIR/$1" ]; }
@@ -177,22 +189,40 @@ transition_word() { # $1 = now  $2 = want
 }
 
 # ---------- global add / remove ---------------------------------------------
-global_add() { # $1 = skill
-  mkdir -p "$GLOBAL_SKILLS_DIR"
-  _target="$CLONE_DIR/$1"
-  _link="$GLOBAL_SKILLS_DIR/$1"
-  if [ -e "$_link" ] && [ ! -L "$_link" ]; then
-    warn "$1: a real directory exists at $_link (not a symlink); leaving it alone."
-    return
-  fi
-  ln -sfn "$_target" "$_link"
-  info "global: linked $1"
+# resolve a client name to its dir
+client_dir() { # $1 = opencode|claude
+  case "$1" in
+    opencode) printf '%s' "$OPENCODE_SKILLS_DIR" ;;
+    claude)   printf '%s' "$CLAUDE_SKILLS_DIR" ;;
+  esac
 }
+client_label() { # $1 = opencode|claude
+  case "$1" in opencode) printf 'opencode' ;; claude) printf 'Claude' ;; esac
+}
+
+# link a skill into the global dir(s) named in $GLOBAL_TARGETS
+global_add() { # $1 = skill
+  _target="$CLONE_DIR/$1"
+  for _client in $GLOBAL_TARGETS; do
+    _dir="$(client_dir "$_client")"
+    mkdir -p "$_dir"
+    _link="$_dir/$1"
+    if [ -e "$_link" ] && [ ! -L "$_link" ]; then
+      warn "$1: a real directory exists at $_link (not a symlink); leaving it alone."
+      continue
+    fi
+    ln -sfn "$_target" "$_link"
+    info "global ($(client_label "$_client")): linked $1"
+  done
+}
+# remove a skill from BOTH global client dirs
 global_remove() { # $1 = skill
-  _link="$GLOBAL_SKILLS_DIR/$1"
-  if [ -L "$_link" ]; then rm -f "$_link"; info "global: removed $1"
-  elif [ -e "$_link" ]; then warn "$1: $_link is a real directory, not removing."
-  fi
+  global_dirs | while IFS= read -r _dir; do
+    _link="$_dir/$1"
+    if [ -L "$_link" ]; then rm -f "$_link"; info "global: removed $1 from $_dir"
+    elif [ -e "$_link" ]; then warn "$1: $_link is a real directory, not removing."
+    fi
+  done
 }
 
 # ---------- local (repo) add / remove ---------------------------------------
@@ -322,9 +352,30 @@ main() {
   say ""
   say "  ${DIM}Note: a shared skill shows '-' until you activate it. Choosing 'l' links it${RESET}"
   say "  ${DIM}into this repo's .claude/skills/ (using the .claude/skills/shared submodule,${RESET}"
-  say "  ${DIM}which is added/updated automatically); 'g' links it into your global dir.${RESET}"
+  say "  ${DIM}which is added/updated automatically); 'g' links it into your chosen global dir(s).${RESET}"
   say ""
-  say "  global skills dir : $GLOBAL_SKILLS_DIR"
+
+  # Ask once, up front, which client(s) global installs should target.
+  # Local installs always go to the repo's .claude/skills/, so this only affects 'g'.
+  say "${BOLD}Global installs: which client should they target?${RESET}"
+  say "  ${DIM}(Local installs always go to this repo's .claude/skills/ regardless.)${RESET}"
+  say "    ${GREEN}1${RESET}) opencode   ${DIM}($OPENCODE_SKILLS_DIR)${RESET}"
+  say "    ${GREEN}2${RESET}) Claude     ${DIM}($CLAUDE_SKILLS_DIR)${RESET}"
+  say "    ${GREEN}3${RESET}) both"
+  printf '  choose [1/2/3] (Enter=1, opencode): '
+  read -r _ct || _ct=""
+  case "$_ct" in
+    2)   GLOBAL_TARGETS="claude" ;;
+    3)   GLOBAL_TARGETS="opencode claude" ;;
+    *)   GLOBAL_TARGETS="opencode" ;;
+  esac
+  _targets_label=""
+  for _client in $GLOBAL_TARGETS; do
+    _targets_label="$_targets_label $(client_label "$_client")"
+  done
+  _targets_label="${_targets_label# }"
+  say ""
+  say "  global target(s)  : ${GREEN}$_targets_label${RESET}"
   if [ -n "$REPO_ROOT" ]; then
     say "  current repo      : $REPO_ROOT ${BLUE}(local installs available)${RESET}"
   else
@@ -445,14 +496,32 @@ main() {
     setup_auto_update
   fi
 
+  # Closing message naming exactly what changed and what to restart.
   say ""
-  info "Done. Restart OpenCode (or reload the session) to pick up skill changes."
+  if [ "${TOUCHED_GLOBAL:-n}" = n ] && [ "${TOUCHED_LOCAL:-n}" = n ]; then
+    info "Done. No skill changes were applied."
+    return
+  fi
+  _restart=""
+  if [ "${TOUCHED_GLOBAL:-n}" = y ]; then
+    for _client in $GLOBAL_TARGETS; do
+      _restart="$_restart, $(client_label "$_client")"
+    done
+  fi
+  if [ "${TOUCHED_LOCAL:-n}" = y ]; then
+    # local skills load in whichever client opens this repo
+    _restart="$_restart, the client you use in this repo"
+  fi
+  _restart="${_restart#, }"
+  info "Done. Restart ${BOLD}$_restart${RESET} (or reload the session) to pick up the skill changes."
 }
 
-# apply the NOW -> WANT diff
+# apply the NOW -> WANT diff. Sets TOUCHED_GLOBAL / TOUCHED_LOCAL for the summary.
 apply_changes() {
   _need_submodule=n
   _local_adds=""
+  TOUCHED_GLOBAL=n
+  TOUCHED_LOCAL=n
   _idx=0
   for s in $SKILLS; do
     _idx=$((_idx+1))
@@ -460,13 +529,13 @@ apply_changes() {
     [ "$_n" = "$_w" ] && continue
     # tear down the old state first
     case "$_n" in
-      G) global_remove "$s" ;;
-      L) local_remove "$s" ;;
+      G) global_remove "$s"; TOUCHED_GLOBAL=y ;;
+      L) local_remove "$s";  TOUCHED_LOCAL=y ;;
     esac
     # build the new state
     case "$_w" in
-      G) global_add "$s" ;;
-      L) _need_submodule=y; _local_adds="$_local_adds $s" ;;
+      G) global_add "$s"; TOUCHED_GLOBAL=y ;;
+      L) _need_submodule=y; _local_adds="$_local_adds $s"; TOUCHED_LOCAL=y ;;
     esac
   done
   if [ "$_need_submodule" = y ]; then
