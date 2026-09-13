@@ -1,6 +1,6 @@
 ---
 name: profinda-deck
-description: Build ProFinda presentation decks from content, not markup. A content-driven engine turns a Python list of slide dicts into a single self-contained HTML deck in the ProFinda design language — 17 layouts (title, section, statement, quote, bullets, two-column, media, gallery, charts, stats, big-number, cards, table, timeline, compare, feature, closing), inline SVG charts, embedded media, embedded Mulish font, a 3D star-cloud flythrough that recolours per Horizon, speaker notes, keyboard/click/swipe nav, per-slide Horizon accent theming (H1 brand / H2 amber / H3 orange-red), and an optional in-browser Edit mode (Alt+E). Use when the user wants a ProFinda slide deck, roadmap/pitch/QBR/review presentation, or to add slides to one. Builds on profinda-design.
+description: Build ProFinda presentation decks from content, not markup. A content-driven engine turns a Python list of slide dicts into a single self-contained HTML deck in the ProFinda design language — 17 layouts (title, section, statement, quote, bullets, two-column, media, gallery, charts, stats, big-number, cards, table, timeline, compare, feature, closing), inline SVG charts, embedded media, embedded Mulish font, a 3D star-cloud flythrough that recolours per Horizon, speaker notes, keyboard/click/swipe nav, per-slide Horizon accent theming (H1 brand / H2 amber / H3 orange-red), and an optional in-browser Edit mode (Alt+E) where presenters can also reorder slides (Left/Right), add a slide in any layout, and delete slides, all without touching Python. Use when the user wants a ProFinda slide deck, roadmap/pitch/QBR/review presentation, or to add slides to one. Builds on profinda-design.
 ---
 
 # ProFinda Decks
@@ -39,8 +39,11 @@ The **layout showcase** (`assets/demo_content.py`) renders every layout and the 
 
 For decks a non-technical presenter should tweak without touching Python, pass `edit=True`. In the built file, pressing **Alt+E** toggles a presenter-only Edit mode:
 - Slide text, keyword chips (add/remove) and speaker notes become editable in place.
-- A top bar shows **Save slide** (persists to the browser's localStorage), **Export .html** (downloads a fresh self-contained deck with all edits baked in), and **Reset edits**.
+- **Left/Right arrow keys reorder the current slide** (when focus isn't in a text field). Presenters can rearrange the deck without an agent.
+- A top bar shows **Save slide**, **+ Add slide** (opens a picker for any of the 17 layouts and inserts a placeholder slide right after the current one, dropped straight into edit mode), **Delete slide** (with a confirm prompt), **Export .html** (downloads a fresh self-contained deck with all edits baked in), and **Reset edits**.
 - Audience navigation is disabled while editing so clicks select text, not change slides.
+
+A slide added via **+ Add slide** gets generic placeholder copy in the chosen layout (title/body/list-item text, exactly as editable as a Python-authored slide of that layout). Media, gallery and chart layouts render a static placeholder since swapping in a real image or chart data still requires the agent/Python side; every other layout is fully text-editable in the browser. Order, added slides and deletions all persist to localStorage and get baked into `Export .html` alongside text edits, so a presenter can rearrange and pad the deck out and only need the agent for genuinely new content (real charts/images, new copy angles) or a final polish pass.
 
 Leave `edit=False` (the default) for clean audience-only decks — none of the edit CSS/JS/UI is included, and the `Alt+E` hint isn't shown. Edits never touch your Python source; to make them permanent either update the `SLIDES` content or keep the exported `.html`.
 
