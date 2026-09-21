@@ -1,6 +1,6 @@
 ---
 name: profinda-deck
-description: Build ProFinda presentation decks from content, not markup. A content-driven engine turns a Python list of slide dicts into a single self-contained HTML deck in the ProFinda design language — 17 layouts (title, section, statement, quote, bullets, two-column, media, gallery, charts, stats, big-number, cards, table, timeline, compare, feature, closing), inline SVG charts, embedded media, embedded Mulish font, a 3D star-cloud flythrough that recolours per Horizon, speaker notes, keyboard/click/swipe nav, per-slide Horizon accent theming (H1 brand / H2 amber / H3 orange-red), and an optional in-browser Edit mode (press E). Use when the user wants a ProFinda slide deck, roadmap/pitch/QBR/review presentation, or to add slides to one. Builds on profinda-design.
+description: Build ProFinda presentation decks from content, not markup. A content-driven engine turns a Python list of slide dicts into a single self-contained HTML deck in the ProFinda design language — 17 layouts (title, section, statement, quote, bullets, two-column, media, gallery, charts, stats, big-number, cards, table, timeline, compare, feature, closing), inline SVG charts, embedded media, embedded Mulish font, a 3D star-cloud flythrough that recolours per Horizon, speaker notes, keyboard/click/swipe nav, per-slide Horizon accent theming (H1 brand / H2 amber / H3 orange-red), and an optional in-browser Edit mode (Alt+E). Use when the user wants a ProFinda slide deck, roadmap/pitch/QBR/review presentation, or to add slides to one. Builds on profinda-design.
 ---
 
 # ProFinda Decks
@@ -37,17 +37,19 @@ The **layout showcase** (`assets/demo_content.py`) renders every layout and the 
 
 ## Edit mode (opt-in: `build(..., edit=True)`)
 
-For decks a non-technical presenter should tweak without touching Python, pass `edit=True`. In the built file, pressing **E** toggles a presenter-only Edit mode:
+For decks a non-technical presenter should tweak without touching Python, pass `edit=True`. In the built file, pressing **Alt+E** toggles a presenter-only Edit mode:
 - Slide text, keyword chips (add/remove) and speaker notes become editable in place.
 - A top bar shows **Save slide** (persists to the browser's localStorage), **Export .html** (downloads a fresh self-contained deck with all edits baked in), and **Reset edits**.
-- Audience navigation is disabled while editing so clicks select text.
+- Audience navigation is disabled while editing so clicks select text, not change slides.
 
-Leave `edit=False` (the default) for clean audience-only decks — none of the edit CSS/JS/UI is included, and the `E` hint isn't shown. Edits never touch your Python source; to make them permanent either update the `SLIDES` content or keep the exported `.html`.
+Leave `edit=False` (the default) for clean audience-only decks — none of the edit CSS/JS/UI is included, and the `Alt+E` hint isn't shown. Edits never touch your Python source; to make them permanent either update the `SLIDES` content or keep the exported `.html`.
+
+Shortcuts use **Alt** (Alt+E edit, Alt+F fullscreen, Alt+N speaker notes) rather than bare letters, so typing "e", "f" or "n" while editing slide text never triggers them.
 
 ## The slide model
 
 Every slide is a dict: `{"layout": <name>, ...fields}`. On **any** slide:
-- `notes` — speaker notes (toggle with the on-cover control or `N`).
+- `notes` — speaker notes (toggle with the on-cover control or `Alt+N`).
 - `horizon` — `"h1"` (default, brand teal/green), `"h2"` (amber), `"h3"` (orange→red). Sets the accent for that slide; the **whole deck eases** to it as you arrive. Phasing only — not decoration, not status.
 - `section` — the label shown top-right.
 - Text fields accept inline HTML, so `<span class="accent">word</span>`, `<br>`, `&rarr;` etc. all work.
@@ -103,6 +105,6 @@ Env: `PF_DECK_OUT` (output dir), `PF_DECK_LOGO` (alternate logo).
 
 - `build()` runs, writes one HTML file that opens standalone by double-click.
 - Self-contained (only base64 assets, 0 external resource refs).
-- Nav + speaker-notes (`N`) work; Horizon 2/3 slides retheme the whole deck (accents + star cloud).
+- Nav + speaker-notes (`Alt+N`) work; Horizon 2/3 slides retheme the whole deck (accents + star cloud).
 - Content lives in a slide list; no bespoke HTML per slide.
-- If `edit=True`: `E` toggles editing, Save persists, Export downloads a baked self-contained copy. If `edit=False`: no edit UI/JS is present.
+- If `edit=True`: `Alt+E` toggles editing, Save persists, Export downloads a baked self-contained copy, and clicking never changes slides while editing. If `edit=False`: no edit UI/JS is present.

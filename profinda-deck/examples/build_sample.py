@@ -3,7 +3,7 @@
 
 This renders the layout showcase (assets/demo_content.py) with edit mode on, so
 the committed sample doubles as (a) a visual reference of all 17 layouts and the
-H1/H2/H3 Horizon themes, and (b) a live demo of Edit mode (press E).
+H1/H2/H3 Horizon themes, and (b) a live demo of Edit mode (press Alt+E).
 
     python3 examples/build_sample.py    # writes examples/sample.html
 

@@ -421,7 +421,7 @@ def render_slide(s):
 # Assemble the deck
 # ---------------------------------------------------------------------------
 def build(slides, title="ProFinda Deck", out="ProFinda-Deck.html", edit=False, subtitle_counter=True):
-    """Render a deck. Set edit=True to include presenter Edit mode (press E):
+    """Render a deck. Set edit=True to include presenter Edit mode (press Alt+E):
     in-place editing of text/chips/notes, a Save/Export/Reset bar, edits
     persisted to localStorage and exportable to a fresh baked-in .html.
     Leave edit=False for clean audience-only decks."""
@@ -449,7 +449,7 @@ def build(slides, title="ProFinda Deck", out="ProFinda-Deck.html", edit=False, s
 # Edit mode (opt-in via build(edit=True)) — injected into the template when on.
 # ---------------------------------------------------------------------------
 EDIT_CSS = r"""
-/* ---------- Edit mode (presenter-only; toggle with E) ---------- */
+/* ---------- Edit mode (presenter-only; toggle with Alt+E) ---------- */
 body.editing [data-edit]{outline:1.5px dashed rgba(255,255,255,.22);outline-offset:4px;border-radius:6px;cursor:text;transition:outline-color .15s ease,background .15s ease}
 body.editing [data-edit]:hover{outline-color:var(--accA);background:rgba(255,255,255,.03)}
 body.editing [data-edit]:focus{outline:2px solid var(--accA);background:rgba(255,255,255,.05)}
@@ -486,10 +486,10 @@ EDIT_BAR = r"""
 </div>
 """
 
-EDIT_HINT = r""" &middot; <span class="key">E</span> edit"""
+EDIT_HINT = r""" &middot; <span class="key">Alt+E</span> edit"""
 
 EDIT_JS = r"""
-/* ---------- Edit mode (presenter-only; toggle with E) ----------
+/* ---------- Edit mode (presenter-only; toggle with Alt+E) ----------
    In-place editing of slide text, chips and speaker notes. Edits are held in an
    overrides buffer (localStorage) replayed onto each slide, and can be exported
    to a fresh self-contained .html with the changes baked in. */
@@ -627,9 +627,9 @@ if(window.__PF_BAKED_OVERRIDES){
 }
 applyOverrides();
 window.addEventListener('keydown',e=>{
+  if(e.altKey && e.code==='KeyE'){ e.preventDefault(); setEdit(!editMode); return; }
   const typing = e.target && (e.target.isContentEditable || /^(INPUT|TEXTAREA)$/.test(e.target.tagName));
   if(typing){ if(e.key==='Escape'){ e.target.blur(); } return; }
-  if(e.key==='e'||e.key==='E'){ e.preventDefault(); setEdit(!editMode); }
 });
 """
 
@@ -972,7 +972,7 @@ h1,h2,h3,h4{line-height:1.06;font-weight:900;letter-spacing:-.02em}
   <div class="na" id="prevBtn" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
   <div class="na" id="nextBtn" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>
 </div>
-<div class="hint" id="hint"><span class="key">&#8592;</span><span class="key">&#8594;</span> arrows or click &#183; <span class="key">F</span> fullscreen &#183; <span class="key">N</span> speaker notes<!--__EDIT_HINT__--></div>
+<div class="hint" id="hint"><span class="key">&#8592;</span><span class="key">&#8594;</span> arrows or click &#183; <span class="key">Alt+F</span> fullscreen &#183; <span class="key">Alt+N</span> speaker notes<!--__EDIT_HINT__--></div>
 
 <div id="notesPanel" aria-live="polite">
   <div class="np-head">Speaker notes</div>
@@ -999,7 +999,7 @@ DATA.slides.forEach(sp=>{
   const t=document.createElement('div');
   t.className='notes-toggle anim d5'; t.id='notesToggle'; t.setAttribute('role','button');
   t.tabIndex=0; t.setAttribute('aria-pressed','false');
-  t.innerHTML='<span class="nt-dot"></span>Speaker notes: <b id="ntState">Off</b><span class="nt-key">N</span>';
+  t.innerHTML='<span class="nt-dot"></span>Speaker notes: <b id="ntState">Off</b><span class="nt-key">Alt+N</span>';
   const host=first.el.querySelector('.cover, .statement, .part, .slide-inner')||first.el.querySelector('.slide-inner');
   host.appendChild(t);
 })();
@@ -1076,15 +1076,18 @@ function prev(){ if(cur>0) go(cur-1); }
 document.getElementById('nextBtn').addEventListener('click',e=>{e.stopPropagation();next();});
 document.getElementById('prevBtn').addEventListener('click',e=>{e.stopPropagation();prev();});
 document.getElementById('stage').addEventListener('click',e=>{
+  if(typeof editMode!=='undefined' && editMode) return; // in edit mode, clicks select/edit text, never navigate
   if(e.target.closest('.na')||e.target.closest('.dots')||e.target.closest('#notesToggle')||e.target.closest('#notesPanel')) return;
   const x=e.clientX/window.innerWidth; if(x<0.28) prev(); else next();
 });
 window.addEventListener('keydown',e=>{
+  if(e.altKey && e.code==='KeyF'){ e.preventDefault(); if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); return; }
+  if(e.altKey && e.code==='KeyN'){ e.preventDefault(); setNotes(!notesOn); return; }
+  const typing = e.target && (e.target.isContentEditable || /^(INPUT|TEXTAREA)$/.test(e.target.tagName));
+  if(typing || (typeof editMode!=='undefined' && editMode)) return;
   if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next();}
   else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev();}
   else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(total-1);}
-  else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-  else if(e.key==='n'||e.key==='N'){ e.preventDefault(); setNotes(!notesOn); }
 });
 let tx=0; window.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
 window.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50){dx<0?next():prev();}},{passive:true});
