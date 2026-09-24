@@ -298,11 +298,21 @@ Blockers:
 
 ## Transitions and closing
 
-Available transitions vary by current state — always call `jira_get_transitions` rather than assuming. Known transitions from "In Progress": `Parked`, `Blocked`, `Closed`, `Waiting Review`, `Cancel`.
+Available transitions vary by current state — always call `jira_get_transitions` rather than assuming. Known transitions from "In Progress": `Parked`, `Blocked`, `Closed`, `Waiting Code Review`, `Cancel`.
 
 - **Starting work**: transition to `In Progress`.
-- **PR opened**: transition to `Waiting Review` + add the PR URL as a comment.
+- **PR opened**: transition to `Waiting Code Review` + add the PR URL as a comment.
 - **Merged**: transition to `Closed` (or auto-closed by the PR).
+
+### The code-review-to-QA handoff is normally automated
+
+SP's Jira↔GitHub integration (Smart Commits + PR review webhooks) advances issues through the code-review pipeline on its own, off commit messages containing the ticket key and PR/review events. Observed directly on SP-11389: `New → Open → In Progress → Waiting Code Review` fired within seconds of the first `[SP-11389]` commit being pushed, and `Waiting Code Review → Code Review Complete` fired on its own once the PR had its required approvals — no `jira_transition_issue` call was made for any of it.
+
+The status that actually signals "QA can start" differs by issue type (confirmed via `GET /rest/api/3/project/SP/statuses`):
+- **Bug, Technical Issue, Question, General Platform Assistance**: two-step — `Waiting Code Review` → **`Code Review Complete`** (this is the QA-visible signal).
+- **Story, Task**: single step — straight to **`Ready for QA`**; no separate "Code Review Complete" status exists for these types.
+
+Default to letting the integration do this — don't call `jira_transition_issue` speculatively just because a PR got approved. Only intervene if you're actively iterating on a PR in the same session and notice the ticket is still stuck below the expected status despite the PR already meeting its required approvals (automation lag, or the repo/PR isn't wired to the integration): call `jira_get_transitions` and move it to `Code Review Complete` / `Ready for QA` yourself so QA isn't left waiting on a webhook that never fired.
 
 Required fields on the `Closed` transition are screen-config driven and differ by hierarchy level:
 
@@ -364,6 +374,6 @@ No PRD files, no agent state files in the repo. Jira is the record.
 - [ ] Dependencies created as issue links
 - [ ] Sign-off row filled when transitioning through an approval gate
 - [ ] Description reflects final understanding (decisions, deviations from plan)
-- [ ] Ticket in correct state (In Progress / Waiting Review / Closed)
+- [ ] Ticket in correct state (In Progress / Waiting Code Review / Code Review Complete / Ready for QA / Closed)
 
 Post a HANDOFF comment only if the developer asks for it, or if explicitly handing off to another agent or session — and even then, keep it short: link the sub-task(s) for what's next rather than describing them.
