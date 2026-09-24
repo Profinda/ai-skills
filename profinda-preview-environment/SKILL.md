@@ -1,6 +1,6 @@
 ---
 name: profinda-preview-environment
-description: Provision and monitor ProFinda preview (staging) environments — API/HAL/AIDA and optionally a wired UI build — via Puppetmaster's agent API, with no kubectl, Docker, or AWS credentials required. Use when an agent needs a live ProFinda stack to reproduce a bug or test a feature end to end (especially from a sandbox that cannot run docker-compose locally), or when the user mentions "preview environment", "puppetmaster", or a staging environment for a specific branch/Jira ticket.
+description: Provision and monitor ProFinda preview environments — API/HAL/AIDA and optionally a wired UI build — via Puppetmaster's agent API, with no kubectl, Docker, or AWS credentials required. Environments always run on the shared `multistaging` cluster and default to the `staging` branch, but any branch combination can be requested, including `integration`/`uat`/`production` branches. Use when an agent needs a live ProFinda stack to reproduce a bug or test a feature end to end (especially from a sandbox that cannot run docker-compose locally), or when the user mentions "preview environment", "puppetmaster", or a staging environment for a specific branch/Jira ticket.
 ---
 
 # ProFinda Preview Environments
@@ -9,6 +9,14 @@ Puppetmaster (`https://puppetmaster.staging.profinda.io`) provisions full ProFin
 stacks — API (or Lite API), HAL, AIDA, Neo4j, Elasticsearch, Postgres, Redis — as
 Kubernetes namespaces on the `multistaging` EKS cluster, plus an optional wired UI
 build. Every action below is a plain HTTPS call, so it works from any sandbox.
+
+**"Staging" here is the infrastructure, not the code under test.** Every
+environment runs on the same `multistaging` cluster regardless of which branch
+you point it at. `hal_branch`/`aida_branch` default to `staging` when omitted,
+and that's the right default for most bug repro/feature work — but any branch
+is valid for any of `api_branch`/`hal_branch`/`aida_branch`, including
+`integration`, `uat`, `production`, or a feature branch, if you specifically
+need to reproduce something against that branch's code.
 
 ## When to use this
 

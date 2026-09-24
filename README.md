@@ -46,7 +46,7 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-jira` | Jira workflow: Epic = living PRD, Story/Task, optional sub-task steps, dependencies as links, dual sign-off. Includes description templates (MD + ADF). Uses `mcp-atlassian` MCP. |
 | `profinda-git-workflow` | Branching, committing, worktree, JIRA ticket conventions |
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
-| `profinda-preview-environment` | Provision and monitor ProFinda preview (staging) environments — API/HAL/AIDA + optional wired UI — via Puppetmaster's agent API, no kubectl/Docker/AWS creds required. Covers the full readiness sequence (status, pods, health checks, UI reachability), pause/resume, and the UI-only-ticket case. |
+| `profinda-preview-environment` | Provision and monitor ProFinda preview environments — API/HAL/AIDA + optional wired UI — via Puppetmaster's agent API, no kubectl/Docker/AWS creds required. Environments always run on the `multistaging` cluster and default to the `staging` branch, but any branch combination can be requested, including `integration`/`uat`/`production` branches or feature branches per repo. Covers the full readiness sequence (status, pods, health checks, UI reachability), pause/resume, and the UI-only-ticket case. |
 | `profinda-prd` | **Deprecated** — the PRD now lives in the Epic. Use `profinda-jira`. |
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |

@@ -8,6 +8,11 @@ Docker, or AWS credentials — Puppetmaster does all cluster work server-side.
 
 ### `POST /webhooks/provision_preview_environment` — create
 
+Every environment runs on the `multistaging` cluster regardless of branch —
+`staging` below is just the default for the branch params, not where it runs.
+Any branch is valid for `api_branch`/`hal_branch`/`aida_branch`, including
+`integration`, `uat`, `production`, or a feature branch.
+
 | Param | Required | Default | Notes |
 |---|---|---|---|
 | `api_branch` | Yes | — | API (or Lite API) branch name |
