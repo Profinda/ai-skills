@@ -7,6 +7,7 @@ Plugins for OpenCode, shared the same way the skills in the repo root are. Each 
 | Plugin | What it does |
 |---|---|
 | [`team`](team/README.md) | Lets an `orchestrator` session spawn and coordinate `player` sessions that report and message each other through `team_*` tools. Ships the two agents, the playbook skill and the `team` / `prs` shell helpers. |
+| [`session-notes`](session-notes/README.md) | Agents record intent, progress, Jira ticket and PRs per session. Shown in the terminal UI (sidebar and `/notes`) and in the web UI through the Chrome/Brave extension that ships in `session-notes/chrome-extension/`. |
 
 ## Layout of a plugin
 
@@ -16,7 +17,8 @@ plugins/<name>/
 ├── index.ts         default export { id, setup }, the V2 plugin definition
 ├── package.json
 ├── agents/          optional: agent definitions to link into ~/.config/opencode/agents/
-└── skills/          optional: skills to link into ~/.config/opencode/skills/
+├── skills/          optional: skills to link into ~/.config/opencode/skills/
+└── chrome-extension/  optional: a browser extension that pairs with the plugin, with its own README
 ```
 
 Plugins are installed from the `~/.config/ai-skills` clone (the one the skills installer maintains) by adding the plugin folder to `plugins` in `~/.config/opencode/opencode.json`, then symlinking any agents or skills it ships. The installer script does not manage plugins yet, so follow the plugin's README.

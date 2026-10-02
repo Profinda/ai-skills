@@ -57,6 +57,7 @@ OpenCode plugins live in [`plugins/`](plugins/README.md). **They require OpenCod
 | Plugin | Description |
 |---|---|
 | [`team`](plugins/team/README.md) | Orchestrator and Player agents plus the `team_*` tools, so parallel sessions coordinate and message each other without the user relaying. Install steps for an agent are in its README. |
+| [`session-notes`](plugins/session-notes/README.md) | Per-session notes (intent, progress, Jira, PRs, preview) for the terminal UI and the web UI. Includes the Chrome/Brave extension and its install steps. |
 
 ## Developer setup
 
