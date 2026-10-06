@@ -47,6 +47,14 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 
+## Plugins
+
+OpenCode plugins live in [`plugins/`](plugins/README.md). **They require OpenCode V2 (2.0.0 or newer) and do not work on V1.**
+
+| Plugin | Description |
+|---|---|
+| [`team`](plugins/team/README.md) | Orchestrator and Player agents plus the `team_*` tools, so parallel sessions coordinate and message each other without the user relaying. Install steps for an agent are in its README. |
+
 ## Developer setup
 
 Each skill that requires additional tooling documents its own setup. See the skill's `README.md`:
