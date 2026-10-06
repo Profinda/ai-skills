@@ -68,6 +68,24 @@ Load the `profinda-write-a-skill` skill first. Do not write skills without it.
 
 Then decide tier (see **Skill Tiers** above) before writing.
 
+## Install (recommended)
+
+The easiest way — no developer tools needed. Open **Terminal** and paste:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh -o /tmp/ai-skills-install.sh && sh /tmp/ai-skills-install.sh
+```
+
+It's a friendly wrapper around `npx skills` (see below) that:
+
+1. Installs Node.js if it's missing (via Homebrew on macOS, the system package manager on Linux) — it asks first.
+2. Checks you can read this repo on GitHub, and offers to sign you in through the browser if not.
+3. Removes links left by the previous version of this installer.
+4. Asks whether the skills are for **just you** (every project) or for **everyone on the current repo** (you commit the result), then lets you add, update or remove skills.
+5. Optionally keeps your personal skills up to date with a weekly background update in `~/.zshrc`.
+
+Re-run it any time to change your selection.
+
 ## Using shared skills in a repo
 
 Shared skills are installed with the [`skills`](https://www.npmjs.com/package/skills) CLI and **committed** to the consuming repo. Developers who clone it get the skills with no extra step. Run these from the consuming repo's root.
@@ -107,7 +125,7 @@ npx skills experimental_install -y
 
 ## Personal (global) install
 
-To have a shared skill in every repo on your machine without committing it anywhere:
+The installer above does this when you pick "just me". The equivalent command, to have a shared skill in every repo on your machine without committing it anywhere:
 
 ```bash
 npx skills add Profinda/ai-skills -g
@@ -135,4 +153,4 @@ find .claude/skills -maxdepth 1 -type l -lname 'shared/*' -delete
 # drop the .claude/skills/profinda-* lines from .gitignore, then follow "Add" above
 ```
 
-Developers who ran the old `install.sh` locally must delete the `shared/*` symlinks and `.claude/skills/shared` before pulling the migrated repo. Global installs from `install.sh` keep working (they symlink into `~/.config/ai-skills`); switch to `npx skills add -g` and remove the `ai-skills weekly auto-update` block from `~/.zshrc` when convenient.
+Developers who ran the old `install.sh` locally must delete the `shared/*` symlinks and `.claude/skills/shared` before pulling the migrated repo. Personal installs made by the old `install.sh` keep working (they symlink into `~/.config/ai-skills`). Re-running the new installer removes those links, reinstalls through `npx skills`, and replaces the old weekly auto-update block in `~/.zshrc`.
