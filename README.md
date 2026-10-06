@@ -6,28 +6,25 @@ Shared skill library for ProFinda repos. Skills teach the AI agent conventions, 
 
 Two tiers — pick based on scope:
 
-| Tier | Location | When to use |
+| Tier | Source of truth | When to use |
 |---|---|---|
-| **Shared** | this repo, mounted via submodule at `<repo>/.claude/skills/shared/` | Used in multiple ProFinda repos |
-| **Repo-local** | `<repo>/.claude/skills/<skill-name>/` | Specific to one repo only |
+| **Shared** | this repo, installed into each consuming repo with [`npx skills`](https://www.npmjs.com/package/skills) and pinned in its `skills-lock.json` | Used in multiple ProFinda repos |
+| **Repo-local** | the consuming repo itself | Specific to one repo only |
 
 ## Example Directory Structure
 
-```
-~/.config/opencode/skills/     ← global/personal skills
-    caveman/
-    grill-me/
+Both tiers live side by side in the consuming repo and are committed there, so a fresh clone already has every skill (and Copilot code review can read them):
 
+```
 profinda_saas/
-└── .claude/
-    └── skills/
-        ├── shared/            ← git submodule → ai-skills (this repo)
-        │   ├── profinda-adr/
-        │   ├── profinda-git-workflow/
-        │   ├── profinda-opera/
-        │   ├── profinda-rfc/
-        │   └── profinda-write-a-skill/
-        └── profinda-domain-interface/   ← repo-local skill (api only)
+├── skills-lock.json                   ← source + hash of each shared skill
+├── .agents/skills/                    ← read by Copilot, Codex, OpenCode, ...
+│   ├── profinda-opera/                ← shared (from ai-skills, listed in the lock)
+│   ├── profinda-git-workflow/         ← shared
+│   └── profinda-domain-interface/     ← repo-local (not in the lock)
+└── .claude/skills/                    ← read by Claude Code
+    ├── profinda-opera -> ../../.agents/skills/profinda-opera
+    └── ...
 ```
 
 ## Naming Convention
@@ -58,7 +55,7 @@ Each skill that requires additional tooling documents its own setup. See the ski
 
 ## Review Process
 
-Before merging a new skill or significant change, get approval from **at least 4 developers**. Open a PR in `ai-skills` and request reviews — skills affect all repos using the submodule.
+Before merging a new skill or significant change, get approval from **at least 4 developers**. Open a PR in `ai-skills` and request reviews — skills affect every repo that installs them.
 
 ## Adding a New Skill
 
@@ -71,71 +68,71 @@ Load the `profinda-write-a-skill` skill first. Do not write skills without it.
 
 Then decide tier (see **Skill Tiers** above) before writing.
 
-## Install (recommended)
+## Using shared skills in a repo
 
-Use the interactive installer instead of the manual steps below. It handles both global (personal) and repo-local installs, and lets you add or remove skills:
+Shared skills are installed with the [`skills`](https://www.npmjs.com/package/skills) CLI and **committed** to the consuming repo. Developers who clone it get the skills with no extra step. Run these from the consuming repo's root.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Profinda/ai-skills/main/install.sh -o /tmp/ai-skills-install.sh && sh /tmp/ai-skills-install.sh
-```
-
-What it does:
-
-1. Clones or updates `~/.config/ai-skills` from this repo's `main`.
-2. Lists every `profinda-*` skill and marks each as GLOBAL, LOCAL (to the repo you ran it from), or not installed.
-3. For each skill, asks: **g**lobal, **l**ocal, **r**emove, or **s**kip.
-   - **Global** symlinks the skill into `~/.config/opencode/skills/` (available in every repo). A `git pull` of `~/.config/ai-skills` refreshes it.
-   - **Local** wires this repo's `.claude/skills/shared` submodule, updates it to the latest `main`, symlinks the chosen skills into `.claude/skills/`, and gitignores those symlinks.
-   - **Remove** deletes the symlink (never the skill content) and cleans the `.gitignore` line for local installs.
-4. Optionally adds a weekly background auto-update for the global clone to `~/.zshrc` (brew/rvm style), so global skills stay fresh without manual pulls.
-
-Re-run it any time to change your selection. It is idempotent and only touches symlinks, the submodule pointer, `.gitignore`, and (if you opt in) one block in `~/.zshrc`.
-
-## Manual setup (fallback / CI)
-
-Use these steps only if you can't run the installer (e.g. non-interactive CI).
-
-### Initial setup
+### Add
 
 ```bash
-git submodule add git@github.com:Profinda/ai-skills.git .claude/skills/shared
-git commit -m "Add ai-skills shared submodule"
+npx skills add Profinda/ai-skills -s profinda-opera -s profinda-git-workflow -a claude-code -y
+git add -f .agents/skills .claude/skills skills-lock.json   # -f in case a global gitignore hides them
 ```
 
-### Clone with submodules
+`-a claude-code` adds the `.claude/skills` symlinks; agents that read `.agents/skills` natively (Copilot, Codex, OpenCode, ...) need no flag. Run `npx skills add Profinda/ai-skills --list` to see what's available.
+
+### Update
 
 ```bash
-# Fresh clone
-git clone --recurse-submodules <repo-url>
-
-# Already cloned without submodules
-git submodule init && git submodule update
+npx skills update -p -y
 ```
 
-### Update to latest shared skills
+Commit the result; the `skills-lock.json` diff shows which skills changed. Never edit installed copies in the consuming repo — change the skill here, merge, then update.
+
+Updating is the consuming repo's responsibility: merging here changes nothing until each repo runs the update and merges it. To automate this Dependabot-style, a consuming repo can add a scheduled GitHub Action that runs `npx skills update -p -y` and opens a PR when `skills-lock.json` changes (it needs a token with read access to `Profinda/ai-skills`).
+
+### Remove
 
 ```bash
-git submodule update --remote .claude/skills/shared
-git add .claude/skills/shared
-git commit -m "Bump ai-skills submodule"
+npx skills remove profinda-<name> -y
 ```
 
-### Make shared skills available in Claude
+Always name the skill: `npx skills remove --all` also deletes the repo's own local skills, since they share `.agents/skills`.
 
-Shared skills live in `.claude/skills/shared/` but must be symlinked to `.claude/skills/` to appear in Claude.
-
-Run this script once after cloning:
+### Restore from the lock file
 
 ```bash
-for dir in .claude/skills/shared/*/; do
-  ln -s "shared/$(basename "$dir")" ".claude/skills/$(basename "$dir")"
-done
+npx skills experimental_install -y
 ```
 
-This creates symlinks so each skill in `shared/` is accessible as a direct child of `.claude/skills/`.
+## Personal (global) install
 
-**Note:** Add these symlinks to your repo's `.gitignore` so they stay local.
+To have a shared skill in every repo on your machine without committing it anywhere:
 
-### Add a repo-local skill
+```bash
+npx skills add Profinda/ai-skills -g
+```
 
-Place it directly in `.claude/skills/<skill-name>/` — no submodule needed. It will be picked up by AI client automatically.
+The CLI asks which skills and which agents to install to; `npx skills update -g -y` refreshes them.
+
+## Add a repo-local skill
+
+In the consuming repo, put it in `.agents/skills/<skill-name>/` and symlink it for Claude Code:
+
+```bash
+ln -s ../../.agents/skills/<skill-name> .claude/skills/<skill-name>
+```
+
+The CLI leaves skills that aren't in `skills-lock.json` alone (`npx skills list` shows them as `Source: local`). Pick a name that doesn't exist here, or a later `npx skills add` overwrites it.
+
+## Migrating from the submodule setup
+
+Repos that used the old `.claude/skills/shared` submodule:
+
+```bash
+git rm .claude/skills/shared   # also drops its .gitmodules entry; git rm .gitmodules if it's now empty
+find .claude/skills -maxdepth 1 -type l -lname 'shared/*' -delete
+# drop the .claude/skills/profinda-* lines from .gitignore, then follow "Add" above
+```
+
+Developers who ran the old `install.sh` locally must delete the `shared/*` symlinks and `.claude/skills/shared` before pulling the migrated repo. Global installs from `install.sh` keep working (they symlink into `~/.config/ai-skills`); switch to `npx skills add -g` and remove the `ai-skills weekly auto-update` block from `~/.zshrc` when convenient.

@@ -123,4 +123,3 @@ always :log_info            # 11. Always executes no matter what
 ## More Detail
 
 See [REFERENCE.md](REFERENCE.md) for: full operation structure example, calling operations API, context auto-population, `default:` option, early exit patterns, schema validation, nested operations, `within`, testing operations, and common patterns.
-
