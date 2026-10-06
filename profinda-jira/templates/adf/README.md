@@ -6,9 +6,10 @@ the source of truth.
 
 ## Regenerate
 
+Regenerate in `Profinda/ai-skills`; repos that installed this skill get the result via `npx skills update`.
+
 ```bash
-cd profinda-jira/templates/adf
-python3 generate.py
+python3 generate.py           # from this directory; paths resolve from the script's location
 ```
 
 ## Check sync (used in CI)
