@@ -190,11 +190,11 @@ export default {
       editor.add({
         name: "set",
         description:
-          "Write session notes (PR link, local preview link, intent, progress) for the CURRENT session, shown by the " +
-          "OpenCode Session Notes Chrome extension. Keyed by this session's ID, so it never leaks into or gets " +
-          "overwritten by other sessions in the same worktree.",
+          "Write session notes (intent, progress, suggested title, Jira ticket, PR link, local preview link) for the " +
+          "CURRENT session, shown by the OpenCode Session Notes Chrome extension and the terminal notes panel. " +
+          "Call early to set `intent`, `title`, and `progress`, and update `progress` as work advances.",
         input: SET_INPUT,
-        options: { namespace: "session-notes" },
+        options: { namespace: "session-notes", pinned: true },
         async execute(args: any, context: any) {
           return { content: await setNotes(args, context.sessionID) }
         },

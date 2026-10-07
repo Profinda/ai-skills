@@ -92,7 +92,7 @@ Details that keep it cheap and correct:
 - Captures come from the `execute.after` tool hook, not from prompting the agent. Calls made inside one `execute` share that call's id, so calls are deduplicated by id, tool and input.
 - A subagent's PR or ticket is recorded on the session you are looking at (its root session).
 - Writes are serialized per session, and nothing is written when nothing changed, so the extension does not re-sync for no reason.
-- The notes tools sit behind `execute`, so they add nothing to every request. Only `plan_ready` is pinned (about 100 tokens per request) so the plan agent can find it.
+- The notes tools sit behind `execute`. `plan_ready` and `set` are pinned so the agent can discover and call them directly to record intent, title, and progress.
 - The cleanup result is queued in the session inbox and reaches the model on its next turn, so it is the only command that leaves text in the context.
 
 ## Storage
