@@ -45,10 +45,6 @@ Always ask explicit confirmation before removing — worktree removal is destruc
 Suffix with ticket in brackets: `Add user auth endpoint [SP-1234]`
 Keep subject line short (50 chars or less).
 
-## Pull Requests
-When opening a PR or writing its title/description, use the `profinda-write-a-pr` skill. Do not use a generic
-`pr` skill.
-
 ## Destructive/Remote Operations — Always Ask First
 
 Before executing ANY command below, STOP. State: (1) exact command, (2) what it does, (3) reversible or not. Then ask explicit yes/no confirmation. No exceptions.
