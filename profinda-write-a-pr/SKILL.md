@@ -1,0 +1,44 @@
+---
+name: profinda-write-a-pr
+description: Write pull request titles and descriptions that follow the current repo's .github/PULL_REQUEST_TEMPLATE.md. Use when opening a PR, writing or editing a PR body/description, or filling in a PR checklist.
+---
+
+# Writing a PR
+
+## Workflow
+
+1. Read the repo's PR template (`.github/PULL_REQUEST_TEMPLATE.md` or `.github/pull_request_template.md`).
+   Fill its sections in order; never add, rename, or remove sections. No template: use `## What` and
+   `## To test`.
+2. List every file changed against the base branch before drafting anything.
+3. Fill each section using the rules below. Rules for a section the template doesn't have don't apply.
+
+## Filling each section
+
+- **PR title**: summarise everything the PR changes, not only its most frequent change or verb.
+- **`JIRA:`**: ticket from the branch name (`SP-XXXX-...`); see the `profinda-git-workflow` skill.
+- **Other link lines** (`UI:`, `API:`, `TEST RUN:`, ...): link the paired PR or run if one exists, else `N/A`.
+- **`## What`**: see "Writing `## What`" below. Skip only for trivial one-liners.
+- **Checklist tables**: copy the table verbatim and answer every row (never delete one to dodge it). Keep each
+  note to a short phrase ("N/A", "Data-only migration"), never restating `## What`. Add any link the
+  template requires for a given answer (e.g. release notes, Slack notification).
+- **`## To test`**: numbered steps a reviewer can execute (action, endpoint, payload) — not "run the specs".
+  `CURRENT`/`EXPECTED` state what the tester observes, not the cause or fix already in `## What`.
+- **`## Screenshots`**: leave `### Before:` / `### After:` blank. User-filled only — never add, describe,
+  or fabricate a screenshot here.
+- **`## cURL requests`**: a runnable `curl` for each new/changed endpoint. Omit the section only when no
+  API surface changed.
+
+## Writing `## What`
+
+Skip preambles and keep prose brief. Pick the smallest view that makes the change clear — see
+[REFERENCE.md](REFERENCE.md) for pseudocode, call-tree, file-tree, Mermaid, and diff examples. Use at most
+one or two, place each next to the short text it supports, and keep only the files, calls, and states
+needed to explain the change.
+
+- Cover every changed file, not just the dominant pattern; an unrelated fix still gets mentioned.
+- Use one format for every part; don't diagram one change and describe the rest in prose.
+- State a fix applied at several sites once, then list the sites — no per-site "same"/"ditto" lines.
+- Describe only the shipped diff; a bug introduced and fixed before pushing has no reviewer value.
+- Describe changes mechanically (old condition → new condition), not domain intent the diff doesn't
+  establish.

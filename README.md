@@ -45,6 +45,7 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-opera` | Step-based operation DSL (`Opera::Operation::Base`) |
 | `profinda-prd` | **Deprecated** — the PRD now lives in the Epic. Use `profinda-jira`. |
 | `profinda-rfc` | Create RFC documents |
+| `profinda-write-a-pr` | Write PR titles and descriptions that follow the repo's `.github/PULL_REQUEST_TEMPLATE.md` |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 
 ## Developer setup
