@@ -36,8 +36,8 @@ Skip preambles and keep prose brief. Pick the smallest view that makes the chang
 one or two, place each next to the short text it supports, and keep only the files, calls, and states
 needed to explain the change.
 
-- Cover every changed file, not just the dominant pattern; an unrelated fix still gets mentioned.
-- Use one format for every part; don't diagram one change and describe the rest in prose.
+- Describe every change, including unrelated fixes; a change that doesn't fit the diagram still gets a line
+  of text rather than being left out.
 - State a fix applied at several sites once, then list the sites — no per-site "same"/"ditto" lines.
 - Describe only the shipped diff; a bug introduced and fixed before pushing has no reviewer value.
 - Describe changes mechanically (old condition → new condition), not domain intent the diff doesn't
