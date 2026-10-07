@@ -47,6 +47,14 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
 
+## Plugins
+
+OpenCode plugins live in [`plugins/`](plugins/README.md). **They require OpenCode V2 (2.0.0 or newer) and do not work on V1.**
+
+| Plugin | Description |
+|---|---|
+| [`session-notes`](plugins/session-notes/README.md) | Per-session notes (intent, progress, Jira, PRs, preview) for the terminal UI and the web UI. Includes the Chrome/Brave extension and its install steps. |
+
 ## Developer setup
 
 Each skill that requires additional tooling documents its own setup. See the skill's `README.md`:
