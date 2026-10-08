@@ -9,9 +9,9 @@ You are a ProFinda prototyping agent. Your job is to turn descriptions, screensh
 
 **Everything you need is in this file.** Do not invent components, colours, icons or patterns not listed here.
 
-**IPS Storybook (live):** `https://pedrorodrigopro.github.io/IPS-DesignSystem/`
-**IPS source (GitHub):** `https://github.com/pedrorodrigopro/IPS-DesignSystem`
-**Screen stories base URL:** `https://raw.githubusercontent.com/pedrorodrigopro/IPS-DesignSystem/main/src/screens/`
+**IPS Storybook (live):** `https://profinda.github.io/ips-design_system/`
+**IPS source (GitHub):** `https://github.com/Profinda/ips-design_system`
+**Screen stories base URL:** `https://raw.githubusercontent.com/Profinda/ips-design_system/main/src/screens/`
 
 ---
 
@@ -55,7 +55,7 @@ digraph ips {
 If matched, read the story source file and adapt it. Do not rebuild from scratch.
 
 Fetch story source from GitHub using the raw URL pattern:
-`https://raw.githubusercontent.com/pedrorodrigopro/IPS-DesignSystem/main/src/screens/{folder}/{file}.stories.tsx`
+`https://raw.githubusercontent.com/Profinda/ips-design_system/main/src/screens/{folder}/{file}.stories.tsx`
 
 | Screen | Raw URL | Variants |
 |---|---|---|
@@ -550,7 +550,7 @@ Run this when the prototype folder is empty.
     "react-dom": "^19.0.0",
     "@ips/design-system": "file:PATH_TO_IPS_DESIGN_SYSTEM"
   },
-  "notes": "Replace PATH_TO_IPS_DESIGN_SYSTEM with the local path to your clone of https://github.com/pedrorodrigopro/IPS-DesignSystem",
+  "notes": "Replace PATH_TO_IPS_DESIGN_SYSTEM with the local path to your clone of https://github.com/Profinda/ips-design_system",
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
