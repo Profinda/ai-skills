@@ -8,8 +8,7 @@ description: Write pull request titles and descriptions that follow the current 
 ## Workflow
 
 1. Read the repo's PR template (`.github/PULL_REQUEST_TEMPLATE.md` or `.github/pull_request_template.md`).
-   Fill its sections in order; never add, rename, or remove sections (the optional Details block is the only
-   addition). No template: use `## What` and `## To test`.
+   Fill its sections in order; never add, rename, or remove sections. No template: use `## What` and `## To test`.
 2. List every file changed against the base branch before drafting anything.
 3. Fill each section using the rules below. Rules for a section the template doesn't have don't apply.
 
@@ -30,10 +29,6 @@ description: Write pull request titles and descriptions that follow the current 
   or fabricate a screenshot here.
 - **`## cURL requests`**: a runnable `curl` for each new/changed endpoint. Omit the section only when no
   API surface changed.
-- **Details** (optional, any repo): after the last template section, a collapsed
-  `<details><summary>Details</summary>…</details>` block for investigation findings, suggestions, next
-  steps, and concerns that don't fit the template. It keeps them in git history for later agents without
-  cluttering the review. Don't repeat anything stated above or narrate how the PR was built. Omit when empty.
 
 ## Writing `## What`
 
