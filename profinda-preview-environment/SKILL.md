@@ -74,6 +74,19 @@ Step 3 alone can add up to ~17 more minutes after step 1 for Rails to finish
 seeding — poll steps 1–2 every ~60 seconds, then retry step 3 every ~30 seconds
 once `available`. Never report an environment as ready on status alone.
 
+## Signing in to the environment
+
+`ui_wired_url` loads the UI against the preview API. The page redirects to `/users/signin` and drops the query string; the `api_endpoint` and `development_domain` values stay in localStorage, so that is normal.
+
+- The only login with a known password is the seeded account owner `admin@example.net`; its password is the environment's own owner password (a cluster Secret), which you must get from the person or team that provisioned it. Other seeded users have random passwords: sign in as the owner and create or reset them in Admin > Users. Passwords from other staging tenants (including the 1Password "Communities - [Staging]" items) do not work here.
+- The sign-in form has only Email and Password. The UI first calls `GET <api_url>/api/v2/accounts/<development_domain>` and takes `full_domain` from the answer (for example `communities.staging.profinda.io`); that value is the `Account` header of the token call and of all later API calls, not the `development_domain`.
+- The token call is `POST <api_url>/api/oauth/token` with JSON `grant_type=password`, `client_id`, `username`, `password`. `client_id` is injected at runtime (`window.PF.config.client_id`); the build placeholder is invalid.
+- A wrong `Account` header and a wrong `client_id` return the same `401 invalid_password` as a wrong password, so when replaying the call with curl copy both from the UI's own request before blaming the password.
+
+## Paused environments answer 502
+
+Every non-permanent environment is paused daily at 19:00 UTC. A paused namespace only runs an ingress fallback, so all API paths, including OPTIONS and `/health` through the proxy, return an nginx `502`, and the UI shows "temporary issue with our servers" (the CORS error in the console is a side effect). Resume it (`PATCH .../resume`, or the Resume button on `puppetmaster_url`), then wait for the readiness sequence above; confirm with a real call such as the account lookup returning `200`. Keep the `env_id` (the UUID in the `puppetmaster_url`): there is no lookup by name or branch, and the agent API cannot make an environment permanent, which is a setting on the Puppetmaster page.
+
 ## Common failures
 
 | Response | Meaning | Action |
