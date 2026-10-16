@@ -1,0 +1,12 @@
+{
+  "name": "opencode-session-notes",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Per-session notes (intent, progress, Jira, PRs, preview) for the Session Notes browser extension",
+  "exports": {
+    ".": "./index.ts",
+    "./rpc": "./rpc.ts",
+    "./tui": "./tui.tsx"
+  }
+}
