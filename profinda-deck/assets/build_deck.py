@@ -472,8 +472,27 @@ body.editing #editBar{display:flex;opacity:1;transform:translateX(-50%) translat
 #editBar .eb-save:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted2);background:transparent}
 #editBar .eb-export:hover{border-color:var(--green);color:var(--green)}
 #editBar .eb-reset:hover{border-color:var(--h3b);color:var(--h3b)}
+#editBar .eb-add:hover{border-color:var(--accA);color:var(--accA)}
+#editBar .eb-del:hover{border-color:var(--h3b);color:var(--h3b)}
 body.editing #notesPanel{outline:1.5px dashed rgba(255,255,255,.22);outline-offset:4px}
 body.editing #notesPanel .np-body[contenteditable]{cursor:text;min-height:1.4em}
+.layout-picker{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:61;
+  display:none;flex-direction:column;gap:12px;width:min(560px,90vw);padding:18px 20px;border-radius:16px;
+  background:rgba(12,22,34,.96);border:1px solid var(--line);backdrop-filter:blur(16px);
+  box-shadow:0 24px 70px rgba(0,0,0,.6);opacity:0;transition:opacity .2s ease,transform .2s ease}
+.layout-picker.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+.lp-head{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accA)}
+.lp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.lp-grid button{font:inherit;font-weight:700;font-size:12.5px;padding:11px 8px;border-radius:10px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer;transition:all .15s ease}
+.lp-grid button:hover{border-color:var(--accA);color:var(--accA);background:rgba(255,255,255,.07)}
+.lp-cancel{align-self:flex-end;font:inherit;font-weight:700;font-size:12px;padding:6px 14px;border-radius:999px;
+  border:1px solid var(--line);background:transparent;color:var(--muted2);cursor:pointer}
+.lp-cancel:hover{color:var(--ink);border-color:var(--ink)}
+.media-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:220px;
+  border:1.5px dashed var(--line);border-radius:16px;color:var(--muted2);font-size:13px;font-weight:600;
+  text-align:center;padding:20px 26px;line-height:1.5}
+.media-ph .ic{width:32px;height:32px;opacity:.55}
 """
 
 EDIT_BAR = r"""
@@ -481,22 +500,42 @@ EDIT_BAR = r"""
   <span class="eb-tag">Edit mode</span>
   <span class="eb-status" id="ebStatus">No changes</span>
   <button class="eb-save" id="ebSave" disabled>Save slide</button>
+  <button class="eb-add" id="ebAdd" title="Add a new slide after this one">+ Add slide</button>
+  <button class="eb-del" id="ebDel" title="Delete this slide">Delete slide</button>
   <button class="eb-export" id="ebExport" title="Download a copy of the deck with all edits baked in">Export .html</button>
   <button class="eb-reset" id="ebReset" title="Discard all saved edits">Reset edits</button>
 </div>
+<div id="layoutPicker" class="layout-picker" aria-hidden="true">
+  <div class="lp-head">Choose a layout for the new slide</div>
+  <div class="lp-grid" id="lpGrid"></div>
+  <button class="lp-cancel" id="lpCancel" type="button">Cancel</button>
+</div>
 """
 
-EDIT_HINT = r""" &middot; <span class="key">Alt+E</span> edit"""
+EDIT_HINT = r""" &middot; <span class="key">Alt+E</span> edit (arrows reorder while editing)"""
 
 EDIT_JS = r"""
 /* ---------- Edit mode (presenter-only; toggle with Alt+E) ----------
-   In-place editing of slide text, chips and speaker notes. Edits are held in an
-   overrides buffer (localStorage) replayed onto each slide, and can be exported
-   to a fresh self-contained .html with the changes baked in. */
-const EDIT_KEY='pf_overrides_v1';
+   In-place editing of slide text, chips, speaker notes, slide order and slide
+   count. Edits are held in an overrides buffer (localStorage) replayed onto
+   each slide, and can be exported to a fresh self-contained .html with the
+   changes baked in.
+
+   Every slide gets a stable id ('o0','o1',... for the slides the deck was
+   built with, 'n0','n1',... for slides added in the browser), independent of
+   its on-screen position. overrides.order is the display order as a list of
+   ids; overrides.slides[id] holds saved content (added slides only exist
+   here, since Python never rendered them); overrides.deletedOriginal tracks
+   originally-authored slides the presenter removed, so a later rebuild of the
+   deck with new Python-authored slides doesn't resurrect ones that were
+   deliberately deleted. */
+const EDIT_KEY='pf_overrides_v2';
 let editMode=false;
-let overrides={};
-try{ overrides = JSON.parse(localStorage.getItem(EDIT_KEY)||'{}') || {}; }catch(e){ overrides={}; }
+let overrides={order:null,slides:{},nextId:0,deletedOriginal:[]};
+try{
+  const raw=JSON.parse(localStorage.getItem(EDIT_KEY)||'null');
+  if(raw && typeof raw==='object') overrides=Object.assign({order:null,slides:{},nextId:0,deletedOriginal:[]},raw);
+}catch(e){}
 
 // Text nodes made directly editable, keyed to the engine's own layout classes.
 const EDIT_SEL = [
@@ -513,21 +552,61 @@ const EDIT_SEL = [
 ].join(',');
 
 function persistOverrides(){ try{ localStorage.setItem(EDIT_KEY, JSON.stringify(overrides)); }catch(e){} }
+function persistOrder(){ overrides.order = slides.map(s=>s.id); persistOverrides(); }
 function captureSlide(i){
-  const inner = slides[i].el.querySelector('.slide-inner');
+  const s=slides[i];
+  const inner = s.el.querySelector('.slide-inner');
   const clone = inner.cloneNode(true);
   clone.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   clone.querySelectorAll('[data-edit]').forEach(el=>el.removeAttribute('data-edit'));
   clone.querySelectorAll('.chip-x,.chip-add').forEach(el=>el.remove());
-  overrides[i] = { html: clone.innerHTML, note: slides[i].note };
+  overrides.slides[s.id] = { html: clone.innerHTML, note: s.note, section: s.section, horizon: s.horizon };
   persistOverrides();
 }
 function applyOverrides(){
-  Object.keys(overrides).forEach(k=>{
-    const i=+k, o=overrides[k]; if(!slides[i]||!o) return;
-    if(o.html!=null) slides[i].el.querySelector('.slide-inner').innerHTML=o.html;
-    if(o.note!=null) slides[i].note=o.note;
+  slides.forEach(s=>{
+    const o=overrides.slides[s.id]; if(!o) return;
+    if(o.html!=null) s.el.querySelector('.slide-inner').innerHTML=o.html;
+    if(o.note!=null) s.note=o.note;
   });
+}
+/* Reconcile the in-memory `slides` array with a saved order: materialize any
+   browser-added slides it references, drop originals the presenter deleted,
+   and keep any newly-authored (Python) slides absent from an older saved
+   order rather than silently hiding them. */
+function materializeOrder(){
+  if(!overrides.order) return;
+  const deleted=new Set(overrides.deletedOriginal||[]);
+  overrides.order.forEach(id=>{
+    if(id[0]==='n' && !slides.some(s=>s.id===id)){
+      const o=overrides.slides[id]; if(!o) return;
+      const d=document.createElement('div'); d.className='slide';
+      d.innerHTML='<div class="slide-inner">'+o.html+'</div>';
+      slidesEl.appendChild(d);
+      slides.push({id, el:d, section:o.section||'', note:o.note||'', horizon:o.horizon||'h1'});
+    }
+  });
+  const byId={}; slides.forEach(s=>byId[s.id]=s);
+  const ordered=[]; const seen=new Set();
+  overrides.order.forEach(id=>{ const s=byId[id]; if(s && !seen.has(id)){ ordered.push(s); seen.add(id); } });
+  slides.forEach(s=>{ if(!seen.has(s.id) && s.id[0]==='o' && !deleted.has(s.id)){ ordered.push(s); seen.add(s.id); } });
+  slides.length=0; ordered.forEach(s=>slides.push(s));
+}
+function relocateNotesToggle(){
+  const t=document.getElementById('notesToggle'); const first=slides[0];
+  if(!t || !first) return;
+  const host=first.el.querySelector('.cover, .statement, .part, .slide-inner')||first.el.querySelector('.slide-inner');
+  if(host && t.parentElement!==host) host.appendChild(t);
+}
+/* Rebuild dots/counter/notes-toggle placement after any add/delete/reorder. */
+function syncStructureAndDom(){
+  slides.forEach(s=>slidesEl.appendChild(s.el));
+  total=slides.length;
+  document.getElementById('totNum').textContent=total;
+  dotsEl.innerHTML='';
+  slides.forEach((s,i)=>{ const d=document.createElement('i'); d.addEventListener('click',()=>go(i)); dotsEl.appendChild(d); });
+  dotEls=[...dotsEl.children];
+  relocateNotesToggle();
 }
 let slideDirty=false;
 function markDirty(){ if(!editMode) return; slideDirty=true; updateEditBar(); }
@@ -577,7 +656,7 @@ const ebStatus=document.getElementById('ebStatus');
 function updateEditBar(){
   if(!editMode) return;
   ebSave.disabled=!slideDirty;
-  ebStatus.textContent = slideDirty ? 'Unsaved changes' : (overrides[cur]?'Saved (edited)':'No changes');
+  ebStatus.textContent = slideDirty ? 'Unsaved changes' : (overrides.slides[slides[cur].id]?'Saved (edited)':'No changes');
   ebStatus.className = 'eb-status'+(slideDirty?' eb-dirty':'');
 }
 function saveCurrent(){ captureSlide(cur); slideDirty=false; updateEditBar(); }
@@ -600,9 +679,185 @@ if(ebExportBtn) ebExportBtn.addEventListener('click',e=>{e.stopPropagation();exp
 const ebResetBtn=document.getElementById('ebReset');
 if(ebResetBtn) ebResetBtn.addEventListener('click',e=>{
   e.stopPropagation();
-  if(!confirm('Discard ALL saved edits and reload the original deck?')) return;
-  overrides={}; persistOverrides(); location.reload();
+  if(!confirm('Discard ALL saved edits (including added/reordered/deleted slides) and reload the original deck?')) return;
+  overrides={order:null,slides:{},nextId:0,deletedOriginal:[]}; persistOverrides(); location.reload();
 });
+
+/* ---------- Placeholder renderers for newly-added slides ----------
+   Mirrors the layout markup the Python engine renders, with generic
+   placeholder copy, so a slide added in the browser looks and edits exactly
+   like one authored in Python (same CSS classes, same EDIT_SEL hooks). Data
+   -heavy layouts (media/gallery/chart) get a static placeholder: swapping in
+   a real image or chart data still goes through the agent/Python side. */
+function pfIcon(name){
+  const P={
+    check:'<path d="M20 7 9 18l-5-5"/>',
+    cross:'<path d="M6 6l12 12M18 6 6 18"/>',
+    spark:'<path d="M12 2v6M12 16v6M2 12h6M16 12h6M5.6 5.6l4.2 4.2M14.2 14.2l4.2 4.2M18.4 5.6l-4.2 4.2M9.8 14.2l-4.2 4.2"/><circle cx="12" cy="12" r="3"/>'
+  };
+  return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(P[name]||P.spark)+'</svg>';
+}
+function pfGlyph(){
+  return '<div class="glyph-wrap anim d2"><div class="glyph">'+
+    '<div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>'+
+    '<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>'+
+    '<div class="core">'+pfIcon('spark')+'</div></div></div>';
+}
+function pfLogoSrc(){ const img=document.querySelector('.topbar img'); return img?img.src:''; }
+function pfMediaPh(hint){
+  return '<div class="media-ph">'+pfIcon('spark')+'<div>'+(hint||'Add media via the agent, image upload is not available in the browser editor yet.')+'</div></div>';
+}
+let pfChartUid=0;
+function pfChartBarSVG(series){
+  const w=560,h=300,pad=40,gid='gBarNew'+(pfChartUid++);
+  const vals=series.map(s=>s[1]); const mx=Math.max.apply(null,vals.concat([1]));
+  const bw=(w-pad*2)/series.length; let bars='',labels='';
+  series.forEach((s,i)=>{
+    const bh=(s[1]/mx)*(h-pad*2), x=pad+i*bw+bw*0.18, y=h-pad-bh, rw=bw*0.64;
+    bars+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+rw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="6" fill="url(#'+gid+')"/>';
+    bars+='<text x="'+(x+rw/2).toFixed(1)+'" y="'+(y-8).toFixed(1)+'" text-anchor="middle" class="cval">'+s[1]+'</text>';
+    labels+='<text x="'+(x+rw/2).toFixed(1)+'" y="'+(h-pad+20).toFixed(1)+'" text-anchor="middle" class="clab">'+s[0]+'</text>';
+  });
+  return '<svg class="chart" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMidYMid meet">'+
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="var(--accA)"/><stop offset="100%" stop-color="var(--accB)"/></linearGradient></defs>'+
+    '<line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" class="cax"/>'+bars+labels+'</svg>';
+}
+const NEW_LAYOUT={
+  'cover':{ label:'Cover', section:'Cover', render:()=>
+    '<div class="cover"><img class="cover-logo anim d0" src="'+pfLogoSrc()+'" alt="ProFinda">'+
+    '<h1 class="anim d2">New slide</h1><p class="sub anim d3">Subtitle text goes here.</p></div>' },
+  'section':{ label:'Section', section:'Section', render:()=>
+    '<div class="part"><div class="kick anim d0">SECTION</div><h2 class="anim d1">Section title</h2>'+
+    '<div class="rule anim d2"></div><p class="cnt anim d3">Optional supporting line.</p></div>' },
+  'statement':{ label:'Statement', section:'Statement', render:()=>
+    '<div class="statement"><h2 class="anim d1">Statement headline</h2>'+
+    '<p class="lead anim d2">Supporting detail goes here.</p></div>' },
+  'quote':{ label:'Quote', section:'Quote', render:()=>
+    '<div class="quote"><blockquote class="anim d1"><span class="qm">&ldquo;</span>Quote text goes here.</blockquote>'+
+    '<div class="qby anim d2">Name, Title</div></div>' },
+  'bullets':{ label:'Bullets', section:'Bullets', render:()=>
+    '<div class="bullets"><h2 class="anim d1">Bullet list</h2><ul class="blist">'+
+    ['First point','Second point','Third point'].map((t,i)=>'<li class="anim d'+(3+Math.min(i,2))+'">'+pfIcon('check')+'<span>'+t+'</span></li>').join('')+
+    '</ul></div>' },
+  'two-col':{ label:'Two column', section:'Two-Col', render:()=>
+    '<div class="twocol-wrap"><h2 class="anim d1">Two columns</h2><div class="twocol anim d2">'+
+    '<div class="tc-col"><h3>Left heading</h3><p class="lead">Left column text.</p></div>'+
+    '<div class="tc-col"><h3>Right heading</h3><p class="lead">Right column text.</p></div></div></div>' },
+  'media':{ label:'Media', section:'Media', render:()=>
+    '<div class="mediaslide"><h2 class="anim d1">Media slide</h2><div class="anim d3">'+
+    '<figure class="media">'+pfMediaPh()+'<figcaption>Caption text</figcaption></figure></div></div>' },
+  'gallery':{ label:'Gallery', section:'Gallery', render:()=>
+    '<div class="gallery-wrap"><h2 class="anim d1">Gallery</h2><div class="gallery">'+
+    [1,2].map(i=>'<div class="gcell anim d'+(1+i)+'"><figure class="media">'+pfMediaPh()+'<figcaption>Caption '+i+'</figcaption></figure></div>').join('')+
+    '</div></div>' },
+  'chart':{ label:'Chart', section:'Chart', render:()=>
+    '<div class="chartslide"><h2 class="anim d1">Chart title</h2><p class="lead anim d2">Supporting detail goes here.</p>'+
+    '<div class="anim d3"><div class="chartwrap">'+pfChartBarSVG([['A',30],['B',55],['C',42]])+'</div></div></div>' },
+  'stats':{ label:'Stats', section:'Stats', render:()=>
+    '<div class="statsslide"><h2 class="anim d1">Key numbers</h2><div class="statrow big">'+
+    [['42','Metric label'],['128','Metric label'],['7x','Metric label']].map((s,i)=>
+      '<div class="stat anim d'+(2+i)+'"><div class="n">'+s[0]+'</div><div class="l">'+s[1]+'</div></div>').join('')+
+    '</div></div>' },
+  'big-number':{ label:'Big number', section:'Big-Number', render:()=>
+    '<div class="bignum"><div class="bn anim d1">42%</div><div class="bnlab anim d2">Label text</div>'+
+    '<p class="lead anim d3">Supporting detail goes here.</p></div>' },
+  'cards':{ label:'Cards', section:'Cards', render:()=>
+    '<div class="cards-wrap"><h2 class="anim d1">Cards</h2><div class="cards c3">'+
+    [0,1,2].map(i=>'<div class="card anim d'+(2+i)+'"><div class="ci">'+pfIcon('spark')+'</div><h4>Card heading</h4><p>Card body text.</p></div>').join('')+
+    '</div></div>' },
+  'table':{ label:'Table', section:'Table', render:()=>
+    '<div class="table-wrap"><h2 class="anim d1">Table</h2><table class="anim d2">'+
+    '<thead><tr><th>Column A</th><th>Column B</th></tr></thead><tbody>'+
+    '<tr><td>Row 1A</td><td>Row 1B</td></tr><tr><td>Row 2A</td><td>Row 2B</td></tr></tbody></table></div>' },
+  'timeline':{ label:'Timeline', section:'Timeline', render:()=>
+    '<div class="timeline-wrap"><h2 class="anim d1">Timeline</h2><div class="timeline">'+
+    [['Q1'],['Q2'],['Q3']].map((s,i)=>
+      '<div class="tl-step anim d'+(2+i)+'"><div class="tl-dot"></div><div class="tl-when">'+s[0]+'</div>'+
+      '<div class="tl-what"><h4>Milestone</h4><p>Detail goes here.</p></div></div>').join('')+
+    '</div></div>' },
+  'compare':{ label:'Compare', section:'Compare', render:()=>
+    '<div class="compare-wrap"><h2 class="anim d1">Compare</h2><div class="compare anim d2">'+
+    '<div class="cmp con"><div class="cmp-h">Before</div><ul>'+
+    ['Point one','Point two'].map(t=>'<li>'+pfIcon('cross')+'<span>'+t+'</span></li>').join('')+
+    '</ul></div><div class="cmp pro"><div class="cmp-h">After</div><ul>'+
+    ['Point one','Point two'].map(t=>'<li>'+pfIcon('check')+'<span>'+t+'</span></li>').join('')+
+    '</ul></div></div></div>' },
+  'feature':{ label:'Feature', section:'Feature', render:()=>
+    '<div class="init"><div class="init-grid"><div class="col-intro"><h2 class="anim d1">Feature</h2>'+
+    '<p class="summary anim d3">Summary text goes here.</p></div>'+
+    '<div class="col-glyph">'+pfGlyph()+'</div>'+
+    '<div class="col-why"><p class="why anim d4"><b>Why it matters -</b> Explain the impact here.</p></div>'+
+    '<div class="col-kw"><div class="kw-wrap anim d3"><div class="kw-head">What it includes</div>'+
+    '<div class="kw"><span class="chip">Keyword</span></div></div></div></div></div>' },
+  'closing':{ label:'Closing', section:'Closing', render:()=>
+    '<div class="closing" style="text-align:center;display:flex;flex-direction:column;align-items:center">'+
+    '<img class="cover-logo anim d0" src="'+pfLogoSrc()+'" alt="ProFinda" style="margin-bottom:34px">'+
+    '<h2 class="anim d1">Thank you.</h2><p class="sub anim d2">Questions?</p></div>' }
+};
+
+/* ---------- Reorder, add and delete slides ---------- */
+function moveSlide(dir){
+  const j=cur+dir;
+  if(j<0||j>=slides.length) return;
+  if(slideDirty) saveCurrent();
+  const tmp=slides[cur]; slides[cur]=slides[j]; slides[j]=tmp;
+  syncStructureAndDom();
+  persistOrder();
+  go(j);
+  refreshEditUIForSlide();
+}
+function deleteCurrentSlide(){
+  if(slides.length<=1){ alert('A deck needs at least one slide.'); return; }
+  if(!confirm('Delete this slide? This can only be undone with Reset edits, which discards ALL edits.')) return;
+  const id=slides[cur].id;
+  if(id[0]==='o'){
+    overrides.deletedOriginal=overrides.deletedOriginal||[];
+    if(!overrides.deletedOriginal.includes(id)) overrides.deletedOriginal.push(id);
+  }
+  delete overrides.slides[id];
+  slides[cur].el.remove();
+  slides.splice(cur,1);
+  syncStructureAndDom();
+  persistOrder();
+  cur=Math.min(cur,slides.length-1);
+  go(cur);
+  refreshEditUIForSlide();
+}
+function newSlideId(){ const id='n'+(overrides.nextId||0); overrides.nextId=(overrides.nextId||0)+1; return id; }
+function addSlideAfterCurrent(layout){
+  const spec=NEW_LAYOUT[layout]; if(!spec) return;
+  if(slideDirty) saveCurrent();
+  const built=spec.render();
+  const id=newSlideId();
+  const section=spec.section, horizon='h1', note='';
+  overrides.slides[id]={ html:built, note, section, horizon };
+  const d=document.createElement('div'); d.className='slide';
+  d.innerHTML='<div class="slide-inner">'+built+'</div>';
+  const pos=cur+1;
+  slides.splice(pos,0,{id, el:d, section, note, horizon});
+  syncStructureAndDom();
+  persistOrder();
+  go(pos);
+  refreshEditUIForSlide();
+}
+const ebAddBtn=document.getElementById('ebAdd');
+const ebDelBtn=document.getElementById('ebDel');
+const layoutPicker=document.getElementById('layoutPicker');
+const lpGrid=document.getElementById('lpGrid');
+function showLayoutPicker(){ layoutPicker.classList.add('show'); layoutPicker.setAttribute('aria-hidden','false'); }
+function hideLayoutPicker(){ layoutPicker.classList.remove('show'); layoutPicker.setAttribute('aria-hidden','true'); }
+Object.keys(NEW_LAYOUT).forEach(k=>{
+  const b=document.createElement('button'); b.type='button'; b.textContent=NEW_LAYOUT[k].label;
+  b.addEventListener('click',e=>{ e.stopPropagation(); hideLayoutPicker(); addSlideAfterCurrent(k); });
+  lpGrid.appendChild(b);
+});
+if(ebAddBtn) ebAddBtn.addEventListener('click',e=>{ e.stopPropagation(); showLayoutPicker(); });
+if(ebDelBtn) ebDelBtn.addEventListener('click',e=>{ e.stopPropagation(); deleteCurrentSlide(); });
+const lpCancelBtn=document.getElementById('lpCancel');
+if(lpCancelBtn) lpCancelBtn.addEventListener('click',e=>{ e.stopPropagation(); hideLayoutPicker(); });
+if(layoutPicker) layoutPicker.addEventListener('click',e=>e.stopPropagation());
+
 function exportDeck(){
   if(slideDirty) saveCurrent();
   const doc=document.documentElement.cloneNode(true);
@@ -623,13 +878,27 @@ function exportDeck(){
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 if(window.__PF_BAKED_OVERRIDES){
-  try{ const baked=window.__PF_BAKED_OVERRIDES; if(!Object.keys(overrides).length){ overrides=baked; persistOverrides(); } }catch(e){}
+  try{
+    const baked=window.__PF_BAKED_OVERRIDES;
+    if(!baked.order && !Object.keys(baked.slides||{}).length) { /* nothing baked */ }
+    else if(!overrides.order && !Object.keys(overrides.slides).length){ overrides=Object.assign({order:null,slides:{},nextId:0,deletedOriginal:[]},baked); persistOverrides(); }
+  }catch(e){}
 }
+materializeOrder();
+syncStructureAndDom();
 applyOverrides();
 window.addEventListener('keydown',e=>{
   if(e.altKey && e.code==='KeyE'){ e.preventDefault(); setEdit(!editMode); return; }
+  if(layoutPicker && layoutPicker.classList.contains('show')){
+    if(e.key==='Escape'){ e.preventDefault(); hideLayoutPicker(); }
+    return;
+  }
   const typing = e.target && (e.target.isContentEditable || /^(INPUT|TEXTAREA)$/.test(e.target.tagName));
   if(typing){ if(e.key==='Escape'){ e.target.blur(); } return; }
+  if(editMode){
+    if(e.key==='ArrowLeft'){ e.preventDefault(); moveSlide(-1); return; }
+    if(e.key==='ArrowRight'){ e.preventDefault(); moveSlide(1); return; }
+  }
 });
 """
 
@@ -986,11 +1255,11 @@ const DATA = __DATA__;
 /* ---------- Build slides from payload ---------- */
 const slidesEl=document.getElementById('slides');
 const slides=[];
-DATA.slides.forEach(sp=>{
+DATA.slides.forEach((sp,i)=>{
   const d=document.createElement('div'); d.className='slide';
   d.innerHTML='<div class="slide-inner">'+sp.html+'</div>';
   slidesEl.appendChild(d);
-  slides.push({el:d,section:sp.section||'',note:sp.note||'',horizon:sp.horizon||'h1'});
+  slides.push({id:'o'+i,el:d,section:sp.section||'',note:sp.note||'',horizon:sp.horizon||'h1'});
 });
 
 /* Add the speaker-notes toggle onto the first slide (usually the cover). */
@@ -1005,13 +1274,13 @@ DATA.slides.forEach(sp=>{
 })();
 
 /* ---------- Navigation engine ---------- */
-let cur=0; const total=slides.length;
+let cur=0; let total=slides.length;
 let stepCamera=(dir,el)=>{};
 document.getElementById('totNum').textContent=total;
 const prog=document.getElementById('prog');
 const dotsEl=document.getElementById('dots');
 slides.forEach((s,i)=>{const d=document.createElement('i');d.addEventListener('click',()=>go(i));dotsEl.appendChild(d);});
-const dotEls=[...dotsEl.children];
+let dotEls=[...dotsEl.children];
 
 function go(i){
   if(i<0||i>=total) return;
