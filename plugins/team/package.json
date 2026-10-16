@@ -1,0 +1,10 @@
+{
+  "name": "opencode-team",
+  "version": "2.0.0",
+  "private": true,
+  "engines": { "node": ">=22.18" },
+  "type": "module",
+  "description": "Orchestrator/player coordination for OpenCode sessions (team_* tools, team CLI)",
+  "exports": { ".": "./index.ts", "./rpc": "./rpc.ts" },
+  "bin": { "team": "./bin/team", "prs": "./bin/prs" }
+}

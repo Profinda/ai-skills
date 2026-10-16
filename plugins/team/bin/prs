@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""PR and worktree helpers for orchestrating stacked/parallel work. Needs gh and git.
+
+  prs list     <repo> --label L                     PRs carrying a label (open + closed)
+  prs label    <repo> <label> <pr...>               create the label if missing, apply it
+  prs overlaps <repo> <pr...>                       files touched by more than one PR (conflict radar)
+  prs reviews  <repo> [<repo2>...] --label L [--need 2]   approvals, stale approvals, requested, CI, urgency
+  prs worktrees <repo-dir>                          per worktree: branch, uncommitted files, unpushed commits, no remote
+  prs sim      <repo-dir> <base-ref> <branch...>    merge branches in order in a throwaway worktree, report conflicts
+"""
+import json, subprocess, sys, itertools, collections, os, tempfile, shutil
+
+def run(*cmd, cwd=None, check=True):
+    p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    if check and p.returncode: raise SystemExit(p.stderr.strip() or p.stdout.strip())
+    return p.stdout
+
+def gh_json(*args): return json.loads(run("gh", *args))
+
+def opt(args, name, default=None):
+    if name in args:
+        i = args.index(name); v = args[i + 1]; del args[i:i + 2]; return v
+    return default
+
+def cmd_list(args):
+    label = opt(args, "--label"); repo = args[0]
+    for p in gh_json("pr", "list", "--repo", repo, "--label", label, "--state", "all", "--limit", "200",
+                     "--json", "number,title,state,isDraft,headRefName,baseRefName"):
+        print(f"#{p['number']} {p['state']}{' draft' if p['isDraft'] else ''} {p['headRefName']} -> {p['baseRefName']} | {p['title'][:70]}")
+
+def cmd_label(args):
+    repo, label, prs = args[0], args[1], args[2:]
+    have = [l["name"] for l in gh_json("label", "list", "--repo", repo, "--search", label, "--json", "name")]
+    if label not in have: run("gh", "label", "create", label, "--repo", repo, "--color", "1D76DB")
+    for n in prs:
+        ok = subprocess.run(["gh", "pr", "edit", n, "--repo", repo, "--add-label", label], capture_output=True).returncode == 0
+        print(f"#{n} {'ok' if ok else 'FAILED'}")
+
+def cmd_overlaps(args):
+    repo, prs = args[0], args[1:]
+    files = {n: set(run("gh", "pr", "diff", n, "--repo", repo, "--name-only").split()) for n in prs}
+    found = False
+    for a, b in itertools.combinations(prs, 2):
+        both = sorted(files[a] & files[b])
+        if both: found = True; print(f"#{a} x #{b}:\n  " + "\n  ".join(both))
+    if not found: print("no overlapping files")
+
+def cmd_reviews(args):
+    label = opt(args, "--label"); need = int(opt(args, "--need", "2")); rows = []
+    for repo in args:
+        for p in gh_json("pr", "list", "--repo", repo, "--label", label, "--state", "open", "--limit", "100",
+                         "--json", "number,title,isDraft,baseRefName,headRefOid,additions,deletions,reviewRequests,statusCheckRollup,mergeStateStatus,updatedAt"):
+            last = {}
+            for r in json.loads(run("gh", "api", f"repos/{repo}/pulls/{p['number']}/reviews", "--paginate")):
+                u = r["user"]["login"]
+                if "copilot" in u.lower() or u.endswith("[bot]"): continue
+                last[u] = (r["state"], r["commit_id"] == p["headRefOid"])
+            appr = [u for u, (s, _) in last.items() if s == "APPROVED"]
+            stale = [u for u in appr if not last[u][1]]
+            chg = [u for u, (s, _) in last.items() if s == "CHANGES_REQUESTED"]
+            checks = p["statusCheckRollup"] or []
+            bad = [c.get("name") or c.get("context") for c in checks if c.get("conclusion") in ("FAILURE", "TIMED_OUT", "CANCELLED")]
+            rows.append(dict(repo=repo.split("/")[-1], n=p["number"], draft=p["isDraft"], base=p["baseRefName"], appr=appr, stale=stale,
+                             chg=chg, req=[r.get("login") or r.get("name") for r in p["reviewRequests"]], bad=bad,
+                             size=p["additions"] + p["deletions"], ms=p["mergeStateStatus"], title=p["title"][:60]))
+    def urgency(r):
+        missing = max(0, need - len(r["appr"]))
+        stacked = r["base"] not in ("master", "main")
+        return (r["draft"], missing == 0, stacked, r["size"])
+    print(f"need {need} approvals; 'stale' = approved an older commit (approval still counts unless branch protection dismisses stale reviews)\n")
+    for r in sorted(rows, key=urgency):
+        missing = max(0, need - len(r["appr"]))
+        flags = [f for f, on in (("DRAFT", r["draft"]), ("CHANGES_REQUESTED", r["chg"]), (f"CI red: {', '.join(r['bad'])}", r["bad"]), ("CONFLICTS", r["ms"] == "DIRTY")) if on]
+        print(f"{r['repo']} #{r['n']} {r['title']}\n   approvals {len(r['appr'])}/{need} {r['appr']}" + (f" stale={r['stale']}" if r["stale"] else "") +
+              f" | missing {missing} | requested {r['req'] or '-'} | size {r['size']} | base {r['base']}" + (f"\n   {' | '.join(flags)}" if flags else ""))
+
+def cmd_worktrees(args):
+    root = args[0]; cur = {}
+    for line in run("git", "worktree", "list", "--porcelain", cwd=root).splitlines() + [""]:
+        if not line:
+            if cur.get("worktree") and cur.get("branch"):
+                path, br = cur["worktree"], cur["branch"].replace("refs/heads/", "")
+                dirty = [l for l in run("git", "status", "--short", cwd=path, check=False).splitlines() if ".opencode" not in l]
+                remote = subprocess.run(["git", "rev-parse", "--verify", "-q", f"origin/{br}"], cwd=path, capture_output=True).returncode == 0
+                ahead = run("git", "rev-list", "--count", f"origin/{br}..HEAD", cwd=path, check=False).strip() if remote else "n/a"
+                print(f"{path}\n   {br}: uncommitted={len(dirty)} unpushed={ahead}{'' if remote else ' NO REMOTE BRANCH'}")
+            cur = {}
+        else:
+            k, _, v = line.partition(" "); cur[k] = v
+
+def cmd_sim(args):
+    root, base, branches = args[0], args[1], args[2:]
+    run("git", "fetch", "origin", "-q", cwd=root, check=False)
+    tmp = tempfile.mkdtemp(prefix="sim-"); run("git", "worktree", "add", "-q", "--detach", tmp, base, cwd=root)
+    try:
+        run("git", "config", "user.email", "sim@local", cwd=tmp); run("git", "config", "user.name", "sim", cwd=tmp)
+        for b in branches:
+            p = subprocess.run(["git", "merge", "--no-ff", "--no-edit", "-q", b], cwd=tmp, capture_output=True, text=True)
+            if p.returncode == 0: print(f"merge {b}: clean")
+            else:
+                files = run("git", "diff", "--name-only", "--diff-filter=U", cwd=tmp).split()
+                print(f"merge {b}: CONFLICT in {' '.join(files)}"); run("git", "merge", "--abort", cwd=tmp, check=False)
+    finally:
+        run("git", "worktree", "remove", "--force", tmp, cwd=root, check=False); shutil.rmtree(tmp, ignore_errors=True)
+
+cmds = {"list": cmd_list, "label": cmd_label, "overlaps": cmd_overlaps, "reviews": cmd_reviews, "worktrees": cmd_worktrees, "sim": cmd_sim}
+if len(sys.argv) < 2 or sys.argv[1] not in cmds: print(__doc__); sys.exit(1)
+cmds[sys.argv[1]](sys.argv[2:])
