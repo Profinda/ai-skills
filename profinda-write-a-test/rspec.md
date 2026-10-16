@@ -385,6 +385,9 @@ expect { subject }.to change { project.reload.status }.from('active').to('archiv
 expect { subject }.to change(Project, :count).by(1).and not_change(Task, :count)
 ```
 
+Alternative where the repo has record matchers: `create_record` / `update_record(...).from().to()` (see
+"Created and updated records").
+
 ### Collections: contents, not size
 
 Use `contain_exactly` (order-independent) or `eq([...])` (order is the behaviour). Not `match_array`,
@@ -414,9 +417,10 @@ expect { subject }.to raise_error(Project::InvalidState)
 it { expect { subject }.to change(Project, :count).by(1) }
 ```
 
-### Created records: no Model.last / Model.first
+### Created and updated records
 
-Order isn't guaranteed. Use the return value, the response id, or `find_by`.
+No `Model.last` / `Model.first` — order isn't guaranteed. Use the return value, the response id, or
+`find_by`.
 
 ```ruby
 # bad
@@ -426,6 +430,25 @@ expect(Project.last.name).to eq('Alpha')
 # good
 expect(subject.output.name).to eq('Alpha')
 expect(Project.find_by(name: 'Alpha')).to be_present
+```
+
+**Alternative** — only if the repo provides record matchers (e.g. api's `CommonEngine` `create_record` /
+`update_record`). One block expectation covers the action, the record, and its attributes, and fails on
+ambiguity. Without them, use the `find_by` / return-value form above.
+
+```ruby
+# good: created record with properties (fails if 2+ records match)
+expect { subject }.to create_record(Project).with_properties(name: 'Alpha', account_id: account.id)
+
+# good: nothing created; chain with another expectation
+expect { subject }.to not_create_record(Project).and create_record(AuditLog)
+
+# good: updated record, always with from + to
+expect { subject }.to update_record(project).from(status: 'active').to(status: 'archived')
+
+# bad: imprecise
+expect { subject }.to create_record(Project)
+expect { subject }.to update_record(project)
 ```
 
 ### Translations: I18n.t!
