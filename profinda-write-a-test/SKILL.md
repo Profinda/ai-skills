@@ -1,6 +1,6 @@
 ---
 name: profinda-write-a-test
-description: Rules for writing minimal, behaviour-focused tests — what makes a test good or bad, which tests to skip, and language-specific guides (Ruby/RSpec). Use when writing, adding, reviewing, or deleting tests/specs, fixing bugs test-first, or when user mentions RSpec, specs, test coverage, or `_spec.rb` files.
+description: Rules for writing minimal, behaviour-focused tests — what makes a test good or bad, which tests to skip, and language-specific guides (Ruby/RSpec, TypeScript/Vitest + React Testing Library). Use when writing, adding, reviewing, or deleting tests/specs, fixing bugs test-first, or when user mentions RSpec, Vitest, React Testing Library, specs, test coverage, or `_spec.rb` / `.spec.ts` / `.spec.tsx` files.
 ---
 
 # Writing Tests
@@ -37,10 +37,11 @@ One bug = one regression test, unless it hides several distinct behaviours.
 | Ruby / FactoryBot | [factory-bot.md](factory-bot.md) |
 | Ruby / Sidekiq jobs | [rspec-sidekiq.md](rspec-sidekiq.md) |
 | Ruby / SQL query counts | [rspec-sqlimit.md](rspec-sqlimit.md) |
-| JavaScript / TypeScript | [javascript.md](javascript.md) (placeholder) |
+| TypeScript / Vitest + React Testing Library | [vitest-rtl.md](vitest-rtl.md) |
 
 Always load the matching guide before writing tests in that language. Ruby: always `rspec.md`, plus each
-gem guide the spec touches (factories, jobs, query counts).
+gem guide the spec touches (factories, jobs, query counts). TypeScript front-end: always `vitest-rtl.md`,
+and check the repo's `AGENTS.md` for its test helpers and setup.
 
 ## Rules
 

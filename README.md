@@ -48,7 +48,7 @@ All skills use the `profinda-` prefix — e.g. `profinda-my-skill`.
 | `profinda-rfc` | Create RFC documents |
 | `profinda-write-a-pr` | Write PR titles and descriptions that follow the repo's `.github/PULL_REQUEST_TEMPLATE.md` |
 | `profinda-write-a-skill` | Create new OpenCode skills with proper structure |
-| `profinda-write-a-test` | Write minimal, behaviour-focused tests: good vs bad tests, no redundant/implementation-detail specs, ask before extra specs. Language guides: RSpec, FactoryBot, rspec-sidekiq, rspec-sqlimit; JS placeholder |
+| `profinda-write-a-test` | Write minimal, behaviour-focused tests: good vs bad tests, no redundant/implementation-detail specs, ask before extra specs. Language guides: RSpec, FactoryBot, rspec-sidekiq, rspec-sqlimit, Vitest + React Testing Library |
 
 ## Developer setup
 
