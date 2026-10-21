@@ -31,6 +31,8 @@ Required before any branch, worktree, or commit. Format: `SP-XXXX`. Ask user if 
 ## Worktrees
 All worktrees go in `.worktrees/` (gitignored). Example: `.worktrees/SP-1234-my-feature`.
 
+If the new branch is created from a remote-tracking ref (e.g. `origin/master`), git auto-sets that as upstream — a plain `git push` would then push straight to `master`. Immediately run `git branch --unset-upstream` after creating such a branch (not needed when branching from a local ref, which doesn't auto-track).
+
 At the end of a session, suggest cleaning up the worktree:
 ```bash
 git worktree remove .worktrees/SP-1234-my-feature
