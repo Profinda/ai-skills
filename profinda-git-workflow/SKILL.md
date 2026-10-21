@@ -1,6 +1,6 @@
 ---
 name: profinda-git-workflow
-description: ProFinda git workflow conventions. Use when user asks about branching, committing, creating a worktree, pushing, or mentions a JIRA ticket (`SP-XXXX`).
+description: ProFinda git workflow conventions. Use when user asks about branching, committing, creating a worktree, pushing, opening/creating a pull request, or mentions a JIRA ticket (`SP-XXXX`).
 ---
 
 # Git Workflow
@@ -46,6 +46,9 @@ Always ask explicit confirmation before removing — worktree removal is destruc
 ## Commit Messages
 Suffix with ticket in brackets: `Add user auth endpoint [SP-1234]`
 Keep subject line short (50 chars or less).
+
+## Pull Requests
+Target the branch the feature branch was created from, not always `master`. E.g. a branch created from `origin/integration` gets a PR targeting `integration`.
 
 ## Destructive/Remote Operations — Always Ask First
 
