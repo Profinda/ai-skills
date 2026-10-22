@@ -37,6 +37,8 @@ Message economy (protects your context): `team_report` never wakes you. Player `
 
 ## Integration stack (end to end locally)
 
+Spawn players in git checkouts of the repo their work belongs to (a worktree you created). OpenCode lists every other directory a session runs in as its own project in the user's sidebar, so do not point `team_spawn` at scratch folders: for QA, inspection or prototype players that need no repo, pass any folder you like and `team_spawn` runs the session in your checkout and gives the player that folder for its files.
+
 Keep every shared artifact of the effort (stack status file, glue and seed scripts, QA scripts, screenshots, handoffs) in the team workspace (`<team space>/workspace/`, shown in `team_roster` and in every brief), not in the repos, so the whole footprint is in one place. Keep a repeatable local glue branch per repo (never pushed) built by a script that recreates it from current origin and merges a manifest of PR branches in order; record resolved conflicts (git rerere) so reruns reproduce them; stop on anything it cannot resolve. Reseed from the generator only: no local top-ups, every gap is a bug in the owning PR. Publish a `Status: READY/NOT READY` line, SHAs, URLs and logins in a stack file, write seed quality gaps to a gaps file the owners read, and run an end-to-end pass as a real user with the owning PR per failure. A stale glue build is the most common false alarm: print merged SHAs and warn when a merged branch moved on origin.
 
 ## Rules worth giving every player (put them in `team_common`)

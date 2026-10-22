@@ -142,7 +142,8 @@ export function createTeamOps(ctx: any, sessions: TeamSessions) {
 
   async function spawnText(input: { team: string; name: string; directory: string; title: string; brief: string; model?: string; role?: string; agent?: string }) {
     const member = await sessions.spawn(input)
-    return `Spawned "${member.name}" in ${member.directory} as session ${member.sessionId} (${member.agent}${member.model ? `, ${member.model}` : ""}).`
+    const notes = member.notes.length ? `\nNote: ${member.notes.join(" ")}` : ""
+    return `Spawned "${member.name}" in ${member.directory} as session ${member.sessionId} (${member.agent}${member.model ? `, ${member.model}` : ""}).${notes}`
   }
 
 
@@ -457,7 +458,7 @@ export function createTeamOps(ctx: any, sessions: TeamSessions) {
     {
       name: "spawn",
       description:
-        "Orchestrator only. Create a new player session in a directory (usually a git worktree you created), register it, and send it its brief. The session uses the `player` agent, is titled with the given title, and gets the team protocol, the team's shared rules (team_common) and your brief. Returns the session id.",
+        "Orchestrator only. Create a new player session in a directory (usually a git worktree you created), register it, and send it its brief. The directory should be a git checkout of the repo the work belongs to: OpenCode lists any other folder as a separate project in the user's sidebar, so a non-git directory (a scratch folder) is replaced by the orchestrator's own checkout and passed to the player as its scratch folder. The session uses the `player` agent, is titled with the given title, and gets the team protocol, the team's shared rules (team_common) and your brief. Returns the session id.",
       input: object(
         {
           team: str(),

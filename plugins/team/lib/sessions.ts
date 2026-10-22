@@ -1,6 +1,7 @@
 // Session operations for the team, done through the V2 plugin context instead of V1 HTTP calls.
 import { ORCHESTRATOR, addResource, ensureWorkspace, getCommon, inboxCounts, logMessage, mutateInbox, orchestratorOf, readRoster, registerMember, workspaceDir, type Member } from "./store.ts"
 import { linkedWorktreeRepo } from "./close.ts"
+import { placeSession } from "./projects.ts"
 import { age, parseModel, standardBrief } from "./protocol.ts"
 
 // Busy/idle per session, fed by session.execution.* events (see events.ts). Kept on globalThis so every
@@ -65,33 +66,38 @@ export function createTeamSessions(ctx: any) {
     brief: string
     model?: string
     agent?: string
-  }): Promise<Member> {
+  }): Promise<Member & { notes: string[] }> {
     const agent = input.agent || "player"
     const model = parseModel(input.model)
+    const placement = await placeSession(input.team, input.directory)
+    const notes: string[] = []
+    if (placement.scratch) {
+      notes.push(`${placement.scratch} is not a git checkout and would show up as a separate project in the OpenCode sidebar, so the session runs in ${placement.directory} and was told to use ${placement.scratch} as its scratch folder.`)
+    }
     const session = await ctx.session.create({
       title: input.title,
       agent,
       ...(model ? { model } : {}),
-      location: { directory: input.directory },
+      location: { directory: placement.directory },
     })
     const member = await registerMember(input.team, {
       name: input.name,
       role: input.role || "player",
       sessionId: session.id,
-      directory: input.directory,
+      directory: placement.directory,
       agent,
       model: input.model,
       title: input.title,
       state: "starting",
     })
     const workspace = await ensureWorkspace(input.team)
-    const repo = await linkedWorktreeRepo(input.directory)
-    if (repo) await addResource(input.team, { kind: "worktree", ref: input.directory, repo, owner: input.name, note: "registered at spawn" })
+    const repo = await linkedWorktreeRepo(placement.directory)
+    if (repo) await addResource(input.team, { kind: "worktree", ref: placement.directory, repo, owner: input.name, note: "registered at spawn" })
     const common = await getCommon(input.team)
-    const text = standardBrief({ team: input.team, name: input.name, title: input.title, common, brief: input.brief, role: input.role, workspace })
+    const text = standardBrief({ team: input.team, name: input.name, title: input.title, common, brief: input.brief, role: input.role, workspace, scratch: placement.scratch })
     await ctx.session.prompt({ sessionID: session.id, text })
     await logMessage(input.team, { from: ORCHESTRATOR, to: input.name, kind: "spawn", text: input.brief.slice(0, 500) })
-    return member
+    return { ...member, notes }
   }
 
   async function rosterTable(team: string): Promise<string> {

@@ -34,6 +34,11 @@ export function envelope(input: {
   return `${header}\n\n${input.text}\n\n${footer}`
 }
 
+const scratchNote = (scratch?: string) =>
+  scratch
+    ? `\nSCRATCH FOLDER: ${scratch}\nThis session runs in a repo checkout so it stays inside that project in the OpenCode sidebar. Your working directory is that checkout, not ${scratch}: put your own notes, scripts, screenshots and output in ${scratch} with absolute paths, and do not create or edit files in the checkout unless the task says so.\n`
+    : ""
+
 const workspaceNote = (workspace?: string) =>
   workspace
     ? `\nTEAM WORKSPACE: ${workspace}\nShared team files go there (status files, scripts, screenshots, QA output, handoffs): not in the repos. Anything you create OUTSIDE the repos that someone must clean up when the team closes (a database, a container project, a branch that exists only locally, a temp directory, a dev server) is registered with team_resource(action="add", ...), with the command that removes it. Worktrees spawned for you are registered automatically.\n`
@@ -49,7 +54,7 @@ export function orchestratorBrief(input: { team: string; name: string; title: st
   return `${header}${workspaceNote(input.workspace)}${common}\nHANDOFF:\n${input.brief.trim()}`
 }
 
-export function standardBrief(input: { team: string; name: string; title: string; common: string; brief: string; role?: string; workspace?: string }): string {
+export function standardBrief(input: { team: string; name: string; title: string; common: string; brief: string; role?: string; workspace?: string; scratch?: string }): string {
   if (input.role === "orchestrator") return orchestratorBrief(input)
   const header =
     `You are "${input.name}", a player in the team "${input.team}", coordinated by the orchestrator session. ` +
@@ -61,7 +66,7 @@ export function standardBrief(input: { team: string; name: string; title: string
     `- Messages from others arrive in this chat as "[team:${input.team}] from <name> ...": act on them, and reply with team_send only when an answer is needed.\n` +
     `- The user can also talk to you directly in this session; their word wins over team messages.\n`
   const common = input.common.trim() ? `\nTEAM RULES:\n${input.common.trim()}\n` : ""
-  return `${header}${workspaceNote(input.workspace)}${common}\nYOUR TASK:\n${input.brief.trim()}`
+  return `${header}${workspaceNote(input.workspace)}${scratchNote(input.scratch)}${common}\nYOUR TASK:\n${input.brief.trim()}`
 }
 
 export function age(iso?: string): string {

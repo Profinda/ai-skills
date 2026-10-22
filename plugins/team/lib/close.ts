@@ -8,7 +8,7 @@ import type { Resource } from "./store.ts"
 
 const run = promisify(execFile)
 
-async function git(cwd: string, ...args: string[]): Promise<{ ok: boolean; out: string }> {
+export async function git(cwd: string, ...args: string[]): Promise<{ ok: boolean; out: string }> {
   try {
     const { stdout } = await run("git", ["-C", cwd, ...args], { maxBuffer: 8 * 1024 * 1024 })
     return { ok: true, out: stdout.trim() }
