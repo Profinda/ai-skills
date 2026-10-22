@@ -42,14 +42,15 @@ Add the absolute path of `TEAM_DIR` to `plugins` in the user's global config, `~
 
 If the file has no `plugins` key, add it. If it already lists plugins, append this path. The plugin has no npm dependencies, so there is nothing to install.
 
-### 4. Link the two agents and the playbook skill
+### 4. Link the agents and the playbook skill
 
-These make the `orchestrator` and `player` agents and the `orchestrating-sessions` skill available in every project:
+These make the `orchestrator` and `player` agents, the four helper subagents (`developer`, `browser-qa`, `product-manager`, `junior-developer`) and the `orchestrating-sessions` skill available in every project. The orchestrator and player prompts delegate noisy work to the helper subagents, so link all six:
 
 ```sh
 mkdir -p ~/.config/opencode/agents ~/.config/opencode/skills
-ln -s "$HOME/.config/ai-skills/plugins/team/agents/orchestrator.md" ~/.config/opencode/agents/orchestrator.md
-ln -s "$HOME/.config/ai-skills/plugins/team/agents/player.md" ~/.config/opencode/agents/player.md
+for agent in orchestrator player developer browser-qa product-manager junior-developer; do
+  ln -s "$HOME/.config/ai-skills/plugins/team/agents/$agent.md" ~/.config/opencode/agents/$agent.md
+done
 ln -s "$HOME/.config/ai-skills/plugins/team/skills/orchestrating-sessions" ~/.config/opencode/skills/orchestrating-sessions
 ```
 
@@ -82,9 +83,22 @@ Then start a new session and check that the `orchestrator` and `player` agents a
 - Update: `git -C ~/.config/ai-skills pull --ff-only`, then `opencode service restart`. The symlinks and the config entry keep pointing at the clone.
 - Uninstall: remove the path from `plugins`, delete the symlinks created in steps 4 and 5, restart the service. Team state under `~/.local/share/opencode-team/` is left alone; delete it only if the user asks.
 
-### Optional companions
+### Helper subagents and their companions
 
-The agents delegate noisy work (CI logs, big diffs, browser QA, Jira grooming) to subagents named `developer`, `browser-qa` and `product-manager`. These are not part of this plugin, and the team tools do not depend on them. If the user has no such agents, tell them the orchestrator prompt names them, and suggest the built-in `general` and `explore` agents instead.
+The orchestrator and player prompts delegate noisy work to four subagents shipped in `agents/`:
+
+| Subagent | Used for | Needs (optional) |
+|---|---|---|
+| `developer` | CI failures, PR status and conflicts, builds and tests, scoped implementation | `gh`; `circleci` CLI |
+| `browser-qa` | Screenshots, console and network checks, Lighthouse | the `chrome-devtools` MCP server |
+| `product-manager` | Jira tickets, PRDs/RFCs/ADRs, sign-off tracking | the `mcp-atlassian` MCP server |
+| `junior-developer` | Trivial mechanical edits, reviewed by the delegating agent | none |
+
+The files set no `model`, so each subagent runs on the model of the session that calls it. To run `junior-developer` on a cheaper model, add `model: <provider>/<model>` to its frontmatter, or set it under `agent.junior-developer.model` in `opencode.json`. The prompts also mention skills that are not in this repo (`jira-cli`, `circleci-cli`, `pr-screenshots`) and the `profinda-jira` and `profinda-git-workflow` skills that are. Each is loaded only when it is installed.
+
+If a subagent needs an MCP server the user has not configured, add it to `mcp` in `opencode.json` (for example `chrome-devtools` with `npx -y chrome-devtools-mcp@latest`, `mcp-atlassian` with `uvx mcp-atlassian` plus `JIRA_URL`, `JIRA_USERNAME` and `JIRA_API_TOKEN` read from the environment). Never write a token into the config file.
+
+The prompts also assume the git safety rules of the user's global `AGENTS.md` (no force-push, no commits on protected branches, no merging or ticket transitions without a yes). The subagents repeat the git rules themselves, but the user should keep them in `~/.config/opencode/AGENTS.md`.
 
 ## What is in here
 
@@ -95,6 +109,7 @@ The agents delegate noisy work (CI logs, big diffs, browser QA, Jira grooming) t
 | RPC contract for the shell client | `rpc.ts` |
 | `orchestrator` agent (primary) | `agents/orchestrator.md` |
 | `player` agent (primary, what spawned sessions run) | `agents/player.md` |
+| Helper subagents `developer`, `browser-qa`, `product-manager`, `junior-developer` | `agents/` |
 | Playbook skill | `skills/orchestrating-sessions/SKILL.md` |
 | Shell: `bin/team` (teams, roster, inspect, send, spawn, common, log), `bin/prs` (list, label, overlaps, reviews, worktrees, sim) | `bin/` |
 | State | `~/.local/share/opencode-team/<team>/` (`roster.json`, `messages.jsonl`, `common.md`, `inbox.json`, `resources.json`, `handoffs/`, `workspace/`); override with `TEAM_HOME`. Closed teams move to `~/.local/share/opencode-team/_closed/` |

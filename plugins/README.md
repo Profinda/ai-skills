@@ -6,7 +6,7 @@ Plugins for OpenCode, shared the same way the skills in the repo root are. Each 
 
 | Plugin | What it does |
 |---|---|
-| [`team`](team/README.md) | Lets an `orchestrator` session spawn and coordinate `player` sessions that report and message each other through `team_*` tools. Ships the two agents, the playbook skill and the `team` / `prs` shell helpers. |
+| [`team`](team/README.md) | Lets an `orchestrator` session spawn and coordinate `player` sessions that report and message each other through `team_*` tools. Ships the two agents, the four helper subagents they delegate to, the playbook skill and the `team` / `prs` shell helpers. |
 
 ## Layout of a plugin
 
@@ -15,7 +15,7 @@ plugins/<name>/
 ├── README.md        what it is, requirements, install steps for the agent that sets it up
 ├── index.ts         default export { id, setup }, the V2 plugin definition
 ├── package.json
-├── agents/          optional: agent definitions to link into ~/.config/opencode/agents/
+├── agents/          optional: agent and subagent definitions to link into ~/.config/opencode/agents/
 └── skills/          optional: skills to link into ~/.config/opencode/skills/
 ```
 
