@@ -26,23 +26,22 @@ migrate them, and don't copy them (see [Patterns you'll see that are not the rul
 
 ## File standards
 
-Name the file after the unit under test, in **snake_case** — components included, matching the
-source file it sits beside. `.spec.tsx` for components, `.spec.ts` for hooks and utilities.
-**Colocate** it next to the source file.
+The spec filename is the source filename plus `.spec` — so it inherits whatever file naming
+convention the repo uses, components included. `.spec.tsx` for components, `.spec.ts` for hooks and
+utilities. **Colocate** it next to the source file.
 
 ```
-// bad: PascalCase spec for a snake_case component file
+// bad: spec invents its own casing instead of matching the source file
 components/user_profile.tsx
 components/UserProfile.spec.tsx
 
 // bad: parked in a separate tests folder, away from the code it covers
 core/helpers/tests/format_date.spec.ts
 
-// good
+// good: same name, same casing, same directory
 components/user_profile.tsx
 components/user_profile.spec.tsx
 
-// good
 core/helpers/format_date.ts
 core/helpers/format_date.spec.ts
 ```
