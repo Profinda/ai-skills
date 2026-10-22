@@ -65,7 +65,7 @@ result.output   # => the record
 ## Key Patterns
 
 - **Output**: avoid manipulating `result.output` at the call site — use context attrs and `step :output` inside the operation instead. See [REFERENCE.md](REFERENCE.md).
-- **Private methods**: keep them as thin helpers only — business logic belongs in named DSL steps so steps appear in `result.executions` and halt correctly. See [REFERENCE.md](REFERENCE.md).
+- **Private methods**: keep them as [thin helpers](REFERENCE.md#avoid-logic-in-private-methods) only — business logic belongs in named DSL steps so steps appear in `result.executions` and halt correctly. Looping over items? Use the [per-item patterns](REFERENCE.md#per-item-processing), not private methods.
 
 ## DSL Quick Reference
 
@@ -119,7 +119,15 @@ always :log_info            # 11. Always executes no matter what
 | Using `always` inside `within` or `transaction` | `always` is top-level only |
 | Using `step` for writing history events | Use `operation` for writing history events |
 | Using `.output` when failure is unexpected | Prefer `.output!` — it raises `OutputError` instead of returning `nil` (cryptic downstream errors). Use `.output` only when you handle the `nil`/failure case. See [REFERENCE.md](REFERENCE.md). |
+| Thin step that only calls a fat private method (facade step) | Split the private work into named steps that pass data through `context` |
+| DB writes, `result.add_error`, broadcasts or external calls inside private methods | Always put these in steps (or nested operations) |
+
+## Before Finishing
+
+- Every DB write, `result.add_error`, broadcast and external call is in a step (or nested operation).
+- Private methods are [thin helpers](REFERENCE.md#avoid-logic-in-private-methods).
+- The private section is clearly smaller than the step methods.
 
 ## More Detail
 
-See [REFERENCE.md](REFERENCE.md) for: full operation structure example, calling operations API, context auto-population, `default:` option, early exit patterns, schema validation, nested operations, `within`, testing operations, and common patterns.
+See [REFERENCE.md](REFERENCE.md) for: thin helper definition, per-item processing, full operation structure example, calling operations API, context auto-population, `default:` option, early exit patterns, schema validation, nested operations, `within`, testing operations, and common patterns.

@@ -34,6 +34,13 @@ Exceptions exist (e.g. extracting `.output` to pass into a subsequent operation 
 
 Private methods should be thin helpers only. Business logic belongs in named DSL steps — they appear in `result.executions`, are self-documenting, and halt the pipeline correctly.
 
+A **thin helper** is a few lines with:
+- no side effects — no DB writes, no `result.add_error`, no broadcasts, no HTTP/external calls
+- no business-rule branching
+- no loops over business items (see [Per-item Processing](#per-item-processing))
+
+Typical thin helpers: SQL/Arel fragments, formatting, simple predicates, scope builders, constant-like lookups.
+
 **Prefer:**
 ```ruby
 step :validate_quota
@@ -80,6 +87,110 @@ end
 ```
 
 The private version hides steps from `result.executions`, makes error halting harder to reason about, and defeats the purpose of the DSL.
+
+**Avoid — facade steps.** The step list looks compliant, but each step is a one-liner over fat private methods:
+```ruby
+step :load_templates
+step :build_connections
+step :persist
+
+def build_connections
+  self.connections = connections_for(templates)
+end
+
+private
+
+def connections_for(templates)
+  templates.flat_map do |template|
+    category = find_or_create_category(template) # DB write hidden in a helper
+    next [] if skip?(template, category)         # business branching hidden in a helper
+    template.keys.map { |key| build_connection(key, category) }
+  end
+end
+
+def find_or_create_category(template) = ...
+def skip?(template, category) = ...
+def build_connection(key, category) = ...
+```
+
+**Prefer — the same work as steps over `context`:**
+```ruby
+context do
+  attr_accessor :templates, :categories, :connections
+end
+
+step :load_templates
+transaction do
+  step :ensure_categories
+  step :reject_archived_templates
+  step :build_connections
+  step :persist
+end
+
+def ensure_categories
+  self.categories = templates.to_h { |t| [t.id, Category.find_or_create_by!(name: t.category_name)] }
+end
+
+def reject_archived_templates
+  self.templates = templates.reject { |t| categories[t.id].archived? }
+end
+
+def build_connections
+  self.connections = templates.flat_map { |t| t.keys.map { |key| Connection.new(key:, category: categories[t.id]) } }
+end
+
+def persist
+  connections.each(&:save!)
+end
+```
+
+### Per-item Processing
+
+Looping over keys/templates/rows is the usual reason logic slips into private methods. Pick one:
+
+**1. Stage steps over collections in `context`** — each step processes the whole collection, then hands it on:
+```ruby
+context do
+  attr_accessor :rows, :values, :records
+end
+
+step :load_rows
+step :resolve_values
+step :build_records
+transaction do
+  step :persist
+end
+
+def load_rows
+  self.rows = Row.where(import_id: schema_output[:import_id]).to_a
+end
+
+def resolve_values
+  self.values = rows.to_h { |row| [row.id, row.raw_value.to_s.strip] }
+end
+
+def build_records
+  self.records = rows.map { |row| Record.new(row_id: row.id, value: values[row.id]) }
+end
+
+def persist
+  records.each(&:save!)
+end
+```
+
+**2. Nested operation per item** — when each item has its own validation/errors. The method MUST return an `Array` of `Opera::Operation::Result`; outputs land in `process_items_output` (array), and failures from every item merge into the parent:
+```ruby
+operations :process_items
+step :output
+
+def process_items
+  items.map { |item| Operations::ProcessItem.call(dependencies: { item:, account: }) }
+end
+
+def output
+  result.output = process_items_output
+end
+```
 
 ## Operation Structure
 
@@ -266,8 +377,8 @@ end
 | Simple derivation from another attribute (no error handling) | `default:` on `attr_reader` in `context do` |
 | Computation that needs `result.add_error` on failure | `step :method` in pipeline |
 | Setting multiple context values at once | `step :method` in pipeline |
-| Complex multi-line logic or branching | `private` method |
-| Helper used only inside other methods | `private` method |
+| Complex multi-line logic or branching | Split into steps (pass data via `context`) or a nested `operation` |
+| Thin helper (see [definition](#avoid-logic-in-private-methods)) | `private` method |
 
 ## Early Exit Patterns
 
